@@ -1,30 +1,43 @@
 vim.cmd("colorscheme nord")
 
-math.randomseed(os.time())
-
 local f = [[
-
-╔════════════════════════════════════════╗
-║  ___  ____  __          _  _  __  _  _ ║
-║ / __)(  __)(  )        / )( \(  )( \/ )║
-║( (__  ) _) / (_/\      \ \/ / )( / \/ \║
-║ \___)(____)\____/       \__/ (__)\_)(_/║
-╚════════════════════════════════════════╝
-
+ ██████╗███████╗██╗         ██╗   ██╗██╗███╗   ███╗
+██╔════╝██╔════╝██║         ██║   ██║██║████╗ ████║
+██║     █████╗  ██║         ██║   ██║██║██╔████╔██║
+██║     ██╔══╝  ██║         ╚██╗ ██╔╝██║██║╚██╔╝██║
+╚██████╗███████╗███████╗     ╚████╔╝ ██║██║ ╚═╝ ██║
+ ╚═════╝╚══════╝╚══════╝      ╚═══╝  ╚═╝╚═╝     ╚═╝
 ]]
+
+local function PrependMargin(margin, text)
+	for _ = 1, margin, 1 do
+		text = " " .. text
+	end
+
+	return text
+end
+
+local function InsertToBuf(margin, text, buf, start_line)
+	for i = 1, #text do
+		local line = text[i]
+		text[i] = PrependMargin(margin, line)
+	end
+
+	vim.api.nvim_buf_set_lines(buf, start_line, -1, false, text)
+end
 
 local window_size = { width = vim.o.columns, height = vim.o.lines }
 
-local art = require("art")
-local idx = math.random(1, #art)
-local selected_art = art[idx]
-
 local title = vim.split(f, "\n")
-local art = vim.split(selected_art, "\n")
 
 local buf = vim.api.nvim_create_buf(false, true)
-vim.api.nvim_buf_set_lines(buf, 0, -1, true, {})
-vim.api.nvim_buf_set_lines(buf, 0, -1, false, title)
+
+local title_margin = 50
+InsertToBuf(title_margin, title, buf, 0)
+
+local art = require("art").GetRandArt()
+InsertToBuf(art.margin, art.text, buf, 7)
+
 vim.api.nvim_set_option_value("modifiable", false, { buf = buf })
 vim.api.nvim_set_current_buf(buf)
 
