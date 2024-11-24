@@ -1,6 +1,7 @@
-vim.cmd("colorscheme nord")
-
-local f = [[
+local M = {}
+M.initialized = false
+M.title_margin = 50
+M.title = [[
  ██████╗███████╗██╗         ██╗   ██╗██╗███╗   ███╗
 ██╔════╝██╔════╝██║         ██║   ██║██║████╗ ████║
 ██║     █████╗  ██║         ██║   ██║██║██╔████╔██║
@@ -9,7 +10,11 @@ local f = [[
  ╚═════╝╚══════╝╚══════╝      ╚═══╝  ╚═╝╚═╝     ╚═╝
 ]]
 
-local function PrependMargin(margin, text)
+function M.ClearBuffer(buf)
+	vim.api.nvim_buf_set_lines(buf, 0, -1, false, {})
+end
+
+function M.PrependMargin(margin, text)
 	for _ = 1, margin, 1 do
 		text = " " .. text
 	end
@@ -17,33 +22,46 @@ local function PrependMargin(margin, text)
 	return text
 end
 
-local function InsertToBuf(margin, text, buf, start_line)
+function M.InsertToBuf(margin, text, buf, start_line)
 	for i = 1, #text do
 		local line = text[i]
-		text[i] = PrependMargin(margin, line)
+		text[i] = M.PrependMargin(margin, line)
 	end
 
 	vim.api.nvim_buf_set_lines(buf, start_line, -1, false, text)
 end
 
-local window_size = { width = vim.o.columns, height = vim.o.lines }
+function M.Init()
+	vim.cmd("colorscheme nord")
+	local window_size = { width = vim.o.columns, height = vim.o.lines }
+	local buf = vim.api.nvim_create_buf(false, true)
+	vim.api.nvim_buf_set_name(buf, "Startup")
 
-local title = vim.split(f, "\n")
+	M.buf = buf
 
-local buf = vim.api.nvim_create_buf(false, true)
+	vim.api.nvim_set_option_value("modifiable", true, { buf = buf })
 
-local title_margin = 50
-InsertToBuf(title_margin, title, buf, 0)
+	M.ClearBuffer(buf)
 
-local art = require("art").GetRandArt()
-InsertToBuf(art.margin, art.text, buf, 7)
+	local title = vim.split(M.title, "\n")
+	M.InsertToBuf(M.title_margin, title, buf, 0)
 
-vim.api.nvim_set_option_value("modifiable", false, { buf = buf })
-vim.api.nvim_set_current_buf(buf)
+	local art = require("startup.art").GetRandArt()
+	M.InsertToBuf(art.margin, art.text, buf, 7)
 
-local win = vim.api.nvim_open_win(
-	buf,
-	true,
-	{ relative = "editor", row = 0, col = 0, width = window_size.width, height = window_size.height }
-)
-vim.api.nvim_win_set_buf(win, buf)
+	vim.api.nvim_set_option_value("modifiable", false, { buf = buf })
+	vim.api.nvim_set_current_buf(buf)
+
+	local win = vim.api.nvim_open_win(
+		buf,
+		true,
+		{ relative = "editor", row = 0, col = 0, width = window_size.width, height = window_size.height }
+	)
+	vim.api.nvim_win_set_buf(win, buf)
+end
+
+function M.Cleanup()
+	vim.api.nvim_buf_delete(M.buf, {})
+end
+
+return M
