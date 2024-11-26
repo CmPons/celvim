@@ -33,6 +33,8 @@ end
 
 function M.Init()
 	vim.cmd("colorscheme nord")
+	vim.o.ruler = false
+
 	local window_size = { width = vim.o.columns, height = vim.o.lines }
 	local buf = vim.api.nvim_create_buf(false, true)
 	vim.api.nvim_buf_set_name(buf, "Startup")
@@ -52,16 +54,18 @@ function M.Init()
 	vim.api.nvim_set_option_value("modifiable", false, { buf = buf })
 	vim.api.nvim_set_current_buf(buf)
 
-	local win = vim.api.nvim_open_win(
-		buf,
-		true,
-		{ relative = "editor", row = 0, col = 0, width = window_size.width, height = window_size.height }
-	)
-	vim.api.nvim_win_set_buf(win, buf)
+	-- local win = vim.api.nvim_open_win(
+	-- 	buf,
+	-- 	true,
+	-- 	{ relative = "editor", row = 0, col = 0, width = window_size.width, height = window_size.height }
+	-- )
+	-- vim.api.nvim_win_set_buf(win, buf)
 end
 
 function M.Cleanup()
-	vim.api.nvim_buf_delete(M.buf, {})
+	if M.buf ~= nil then
+		vim.api.nvim_buf_delete(M.buf, {})
+	end
 end
 
 return M
