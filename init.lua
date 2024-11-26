@@ -3,6 +3,7 @@ local modules = {
 	"startup",
 	"statusline",
 	"cmdwin",
+	"terminal",
 }
 
 function LoadModules()

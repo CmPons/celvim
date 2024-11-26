@@ -1,0 +1,10 @@
+vim.keymap.set("n", "<C-/>", function()
+	vim.cmd("Terminal")
+end, {})
+
+vim.api.nvim_create_user_command("Terminal", function()
+	vim.cmd("tabnew")
+	vim.cmd(":term")
+	vim.api.nvim_buf_set_name(0, "Terminal")
+	vim.cmd("startinsert")
+end, {})
