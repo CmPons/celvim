@@ -4,6 +4,7 @@ local modules = {
 	"statusline",
 	"cmdwin",
 	"terminal",
+	"file_explorer",
 }
 
 function LoadModules()
