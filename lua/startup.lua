@@ -48,18 +48,11 @@ function M.Init()
 	local title = vim.split(M.title, "\n")
 	M.InsertToBuf(M.title_margin, title, buf, 0)
 
-	local art = require("startup.art").GetRandArt()
+	local art = require("startup.art"):GetRandArt()
 	M.InsertToBuf(art.margin, art.text, buf, 7)
 
 	vim.api.nvim_set_option_value("modifiable", false, { buf = buf })
 	vim.api.nvim_set_current_buf(buf)
-
-	-- local win = vim.api.nvim_open_win(
-	-- 	buf,
-	-- 	true,
-	-- 	{ relative = "editor", row = 0, col = 0, width = window_size.width, height = window_size.height }
-	-- )
-	-- vim.api.nvim_win_set_buf(win, buf)
 end
 
 function M.Cleanup()

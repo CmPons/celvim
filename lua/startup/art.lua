@@ -141,13 +141,15 @@ local some_other_girl =
 ⣏⢾⡹⣞⢧⣛⣮⠽⣞⣵⢺⣝⢾⣱⡏⣈⠁⠀⠀⠀⡐⢀⠂⡐⠠⠁⠌⡐⢀⠀⠀⠀⠀⠌⡐⢀⠀⠀⢻⣿⣿⣎⡷⣹⢎⡷⢎⡿⣸⢭]]
 
 M = {}
-M.art = { twob, laptop_girl, eyes_girl, k_on, some_other_girl }
-M.margin = { 43, 42, 44, 43, 51 }
-M.GetRandArt = function()
+
+function M:GetRandArt()
+	local art = { twob, laptop_girl, eyes_girl, k_on, some_other_girl }
+	local margin = { 43, 42, 44, 43, 51 }
+
 	math.randomseed(os.time())
-	local idx = math.random(1, #M.art)
-	local art_lines = vim.split(M.art[idx], "\n")
-	local ret = { text = art_lines, margin = M.margin[idx] }
+	local idx = math.random(1, #art)
+	local art_lines = vim.split(art[idx], "\n")
+	local ret = { text = art_lines, margin = margin[idx] }
 	return ret
 end
 
