@@ -1,17 +1,24 @@
 M = {}
 function M.GetFilesInPath(dir)
-	local files = vim.system({ "find", dir, "-maxdepth", "1", "-type", "f" }, { text = true }):wait()
-	files = vim.split(files.stdout, "\n")
-	return files
+	local find_result = vim.system({ "find", dir, "-type", "f", "-maxdepth", "1" }, { text = true }):wait()
+	local files = vim.system({ "sort" }, { text = true, stdin = find_result.stdout }):wait()
+
+	find_result = vim.system({ "find", dir, "-type", "d", "-maxdepth", "1" }, { text = true }):wait()
+	local directories = vim.system({ "sort" }, { text = true, stdin = find_result.stdout }):wait()
+	local all_files = vim.split(files.stdout .. directories.stdout, "\n")
+
+	for i = #all_files, 1, -1 do
+		local file = all_files[i]
+		if file == "." then
+			table.remove(all_files, i)
+			break
+		end
+	end
+
+	return all_files
 end
 
-function M.GetDirectoriesInPath(dir)
-	local files = vim.system({ "find", dir, "-maxdepth", "1", "-type", "d" }, { text = true }):wait()
-	files = vim.split(files.stdout, "\n")
-	return files
-end
-
-function M.BuildDisplayName(path, file_type)
+function M.BuildDisplayName(path, is_dir)
 	local split_path = vim.split(path, "/")
 	if #split_path == 1 or path == "" then
 		return path
@@ -19,7 +26,7 @@ function M.BuildDisplayName(path, file_type)
 
 	local display_name = split_path[#split_path]
 
-	if file_type == "Directory" then
+	if is_dir then
 		display_name = display_name .. "/"
 	end
 
@@ -50,10 +57,10 @@ function M.FindVisibleChild(root, place)
 end
 
 function M.PrintStates(root)
-	print("Name: " .. root.display_name .. " visible " .. tostring(root.visible))
+	print("Name: " .. root.path .. " visible " .. tostring(root.visible))
 
 	for _, child in ipairs(root.children) do
-		print("Name: " .. child.display_name .. " visible " .. tostring(child.visible))
+		print("Name: " .. child.path .. " visible " .. tostring(child.visible))
 		M.PrintStates(child)
 	end
 end
