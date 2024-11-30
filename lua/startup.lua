@@ -22,6 +22,16 @@ function M.PrependMargin(margin, text)
 	return text
 end
 
+M.FindBufferByName = function(name)
+	for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+		local buf_name = vim.api.nvim_buf_get_name(buf)
+		if buf_name == name then
+			return buf
+		end
+	end
+	return -1
+end
+
 function M.InsertToBuf(margin, text, buf, start_line)
 	for i = 1, #text do
 		local line = text[i]
@@ -35,9 +45,7 @@ function M.Init()
 	vim.cmd("colorscheme nord")
 	vim.o.ruler = false
 
-	local window_size = { width = vim.o.columns, height = vim.o.lines }
 	local buf = vim.api.nvim_create_buf(false, true)
-	vim.api.nvim_buf_set_name(buf, "Startup")
 
 	M.buf = buf
 
@@ -53,12 +61,6 @@ function M.Init()
 
 	vim.api.nvim_set_option_value("modifiable", false, { buf = buf })
 	vim.api.nvim_set_current_buf(buf)
-end
-
-function M.Cleanup()
-	if M.buf ~= nil then
-		vim.api.nvim_buf_delete(M.buf, {})
-	end
 end
 
 return M
