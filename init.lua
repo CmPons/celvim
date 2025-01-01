@@ -1,14 +1,13 @@
 local modules = {
+	"cmdwin",
 	"keymaps",
+	"file_explorer",
+	"file_finder",
+	"settings",
 	"startup",
 	"startup.art",
 	"statusline",
-	"cmdwin",
 	"terminal",
-	"file_explorer",
-	"file_explorer.icons",
-	"file_explorer.utils",
-	"file_finder",
 }
 
 function LoadModules()

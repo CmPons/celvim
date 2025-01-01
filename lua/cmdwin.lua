@@ -22,5 +22,6 @@ vim.api.nvim_create_autocmd("CmdwinEnter", {
 		}
 
 		vim.api.nvim_win_set_config(0, config)
+		vim.keymap.set("n", "<esc>", ":q<enter>", { buffer = 0 })
 	end,
 })
