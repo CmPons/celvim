@@ -1,42 +1,31 @@
-function FuzzyFind()
-	local output_buf = vim.api.nvim_create_buf(false, true)
-	local config = {
-		relative = "editor",
-		row = 0,
-		col = 25,
-		width = 100,
-		height = 25,
-		border = "double",
-		style = "minimal",
-		title = "fzf",
-	}
-	local fzf_output = vim.api.nvim_open_win(output_buf, false, config)
+local function fuzzy_find()
+	local augrp = vim.api.nvim_create_augroup("FzfAutocmds", { clear = true })
 
-	local input_buf = vim.api.nvim_create_buf(false, true)
-	local input_config = {
-		relative = "editor",
-		row = 27,
-		col = 25,
-		width = 100,
-		height = 1,
-		border = "double",
-		style = "minimal",
-	}
-	local input = vim.api.nvim_open_win(input_buf, true, input_config)
-	vim.cmd.startinsert()
+	vim.api.nvim_create_autocmd("TermOpen", {
+		callback = function()
+			vim.cmd.startinsert()
+		end,
+		group = augrp,
+	})
 
-	vim.keymap.set("n", "<escape>", function()
-		vim.api.nvim_win_close(fzf_output, true)
-		vim.api.nvim_win_close(input, true)
-	end, { buffer = input_buf })
+	vim.api.nvim_create_autocmd("TermClose", {
+		callback = function()
+			local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+			local file = nil
+			if #lines > 0 then
+				file = lines[1]
+			end
 
-	Setupfzf(output_buf, input)
+			if file ~= nil then
+				vim.api.nvim_clear_autocmds({ group = augrp })
+				vim.api.nvim_buf_delete(0, { force = true })
+				vim.cmd.tabedit(file)
+			end
+		end,
+		group = augrp,
+	})
+
+	vim.cmd.term("fzf")
 end
 
-vim.keymap.set("n", "<leader>ff", FuzzyFind, { desc = "Find File" })
-
-function Setupfzf(output_buf, input_buf)
-	local output = vim.system({ "fzf" }, { text = true }):wait()
-
-	vim.api.nvim_buf_set_lines(output_buf, 0, -1, false, { output.stdout })
-end
+vim.keymap.set("n", "<leader>ff", fuzzy_find, { desc = "Find File" })
