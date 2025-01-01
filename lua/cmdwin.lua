@@ -8,7 +8,7 @@ vim.keymap.set("n", ":", "q:", {})
 vim.api.nvim_create_autocmd("CmdwinEnter", {
 	callback = function()
 		-- Force insert mode
-		vim.cmd("startinsert")
+		vim.cmd.startinsert()
 
 		local config = {
 			relative = "editor",

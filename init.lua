@@ -8,6 +8,7 @@ local modules = {
 	"file_explorer",
 	"file_explorer.icons",
 	"file_explorer.utils",
+	"file_finder",
 }
 
 function LoadModules()

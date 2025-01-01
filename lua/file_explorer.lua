@@ -13,8 +13,10 @@ local function refresh_file_view(new_path)
 	WriteFileTreeToBuf(0, file_tree)
 
 	local saved_pos = cursor_pos_save[new_path] or { 1, 1 }
-
-	vim.api.nvim_win_set_cursor(0, saved_pos)
+	local success = pcall(vim.api.nvim_win_set_cursor, 0, saved_pos)
+	if not success then
+		vim.api.nvim_win_set_cursor(0, { 1, 1 })
+	end
 end
 
 local function on_select_line()
@@ -26,8 +28,6 @@ local function on_select_line()
 	if file_item == nil then
 		return
 	end
-
-	print("Selected .. " .. file_item.display_name .. " at " .. file_item.path)
 
 	if file_item.type == "File" then
 		vim.api.nvim_win_close(0, true)
@@ -83,7 +83,7 @@ vim.api.nvim_create_user_command("FileExplorer", function()
 
 	vim.keymap.set("n", "<leader>fe", function()
 		vim.api.nvim_win_close(0, true)
-	end, { buffer = buf })
+	end, { buffer = buf, desc = "File Explorer" })
 end, { desc = "Open the file explorer" })
 
 function WriteFileTreeToBuf(buf, tree_root)
@@ -151,4 +151,4 @@ end
 vim.keymap.set("n", "<Leader>f", "", { desc = "Files" })
 vim.keymap.set("n", "<Leader>fe", function()
 	vim.cmd("FileExplorer")
-end, {})
+end, { desc = "File Explorer" })
