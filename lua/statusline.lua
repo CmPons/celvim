@@ -27,6 +27,24 @@ local modes = {
 	["!"] = { "SHELL", "St_TerminalMode" },
 }
 
+local mode_color = {
+	["St_NormalMode"] = "#8fbcbb",
+	["St_InsertMode"] = "#a3be8c",
+	["St_TerminalMode"] = "#81a1c1",
+	["St_NTerminalMode"] = "#5e81ac",
+	["St_VisualMode"] = "#bf616a",
+	["St_ReplaceMode"] = "#d08770",
+	["St_SelectMode"] = "#ebcb8b",
+	["St_CommandMode"] = "#88c0d0",
+	["St_ConfirmMode"] = "#b48ead",
+}
+
+local function set_colors()
+	for group, color in pairs(mode_color) do
+		vim.api.nvim_command("hi " .. group .. " guibg=" .. color)
+	end
+end
+
 local function mode()
 	local m = vim.api.nvim_get_mode().mode
 	local current_mode = "%#" .. modes[m][2] .. "#" .. modes[m][1]
@@ -136,6 +154,8 @@ local function lsp_diagnostics()
 end
 
 function StatusLine()
+	-- set_colors()
+
 	return spacer()
 		.. mode()
 		.. spacer()
