@@ -90,6 +90,19 @@ M.Init = function()
 			end
 		end,
 	})
+
+	vim.api.nvim_create_autocmd("InsertCharPre", {
+		group = lsp_funcs,
+		buffer = vim.api.nvim_get_current_buf(),
+		callback = function()
+			if vim.fn.pumvisible() == 1 or vim.fn.state("m") == "m" then
+				return
+			end
+			local char = vim.v.char
+			local key = vim.keycode("<C-x><C-o>")
+			vim.api.nvim_feedkeys(key, "m", false)
+		end,
+	})
 end
 
 M.Cleanup = function()
