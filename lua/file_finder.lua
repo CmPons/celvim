@@ -28,7 +28,7 @@ local function fuzzy_find()
 			if file ~= nil then
 				vim.api.nvim_clear_autocmds({ group = augrp })
 				vim.api.nvim_buf_delete(0, { force = true })
-				vim.cmd.tabedit(file)
+				vim.cmd.tabnew(file)
 
 				local filetype = get_filetype(file)
 				if filetype ~= nil then
@@ -39,7 +39,14 @@ local function fuzzy_find()
 		group = augrp,
 	})
 
-	vim.cmd.term("fzf")
+	vim.cmd.tabnew()
+
+	-- Nord color scheme for fzf
+	vim.cmd.term("fzf --preview 'bat --style=numbers --color=always --line-range :500 {}'")
+
+	-- Change buffer name to fzf
+	vim.cmd(":f fzf")
+	vim.keymap.set("n", "<esc>", ":q<enter>", { buffer = vim.api.nvim_get_current_buf() })
 end
 
 vim.keymap.set("n", "<leader>ff", fuzzy_find, { desc = "Find File" })
