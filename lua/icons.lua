@@ -121,5 +121,4 @@ local file_type_icons = {
 	["sol"] = "ﲹ",
 	["pem"] = "",
 }
-
 return file_type_icons

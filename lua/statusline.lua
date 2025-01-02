@@ -41,14 +41,15 @@ local mode_color = {
 
 local function set_colors()
 	for group, color in pairs(mode_color) do
-		vim.api.nvim_command("hi " .. group .. " guibg=" .. color)
+		vim.api.nvim_command("hi " .. group .. " guibg=" .. color .. " guifg=#434c5e gui=bold")
 	end
+
+	vim.api.nvim_command("hi St_CurrentFile guibg=#5e81ac")
 end
 
 local function mode()
 	local m = vim.api.nvim_get_mode().mode
 	local current_mode = "%#" .. modes[m][2] .. "#" .. modes[m][1]
-
 	return table.concat({ current_mode })
 end
 
@@ -56,25 +57,26 @@ local function spacer()
 	return table.concat({ "%#Spacer# " })
 end
 
-local function separator()
-	return [[]]
-end
-
 local function file_info()
 	local filename = (vim.fn.expand("%") == "" and "Empty ") or vim.fn.expand("%:t")
 	local icon = ""
 
+	local utils = require("utils")
+	if string.find(filename, ".") == nil or string.find(filename, ":") then
+		return table.concat({ "%#St_CurrentFile#", " ", " ", utils.sanitize_terminal_name(filename), " " })
+	end
+
 	if filename ~= "Empty " then
-		local utils = require("utils")
 		local ext = utils.get_filetype(filename)
 		local icons = require("icons")
 		icon = icons[ext]
 		if icon == nil then
 			icon = ""
 		end
+		return table.concat({ "%#St_CurrentFile#", " ", icon, " ", filename, " " })
 	end
 
-	return table.concat({ "%#St_CurrentFile#", icon, " ", filename, " " })
+	return ""
 end
 
 local function get_gitstatus()
@@ -94,7 +96,7 @@ local function get_gitstatus()
 	local untracked = 0
 
 	for _, line in ipairs(lines) do
-		local start = string.sub(line, 1, 1)
+		local start = string.sub(line, 2, 2)
 		if start == "A" then
 			added = added + 1
 		-- Modified, renamed or copied
@@ -106,6 +108,8 @@ local function get_gitstatus()
 			untracked = untracked + 1
 		end
 	end
+
+	-- print("Git add " .. added .. " changed " .. changed)
 
 	local branch = vim.split(lines[1], "%.%.%.")[1]
 	local branch_name = string.gsub(branch, "## ", "")
@@ -154,20 +158,9 @@ local function lsp_diagnostics()
 end
 
 function StatusLine()
-	-- set_colors()
+	set_colors()
 
-	return spacer()
-		.. mode()
-		.. spacer()
-		.. spacer()
-		.. separator()
-		.. spacer()
-		.. spacer()
-		.. file_info()
-		.. "%="
-		.. lsp_diagnostics()
-		.. spacer()
-		.. git()
+	return mode() .. file_info() .. spacer() .. "%=" .. lsp_diagnostics() .. spacer() .. git() .. spacer()
 end
 
 vim.o.statusline = "%!v:lua.StatusLine()"
