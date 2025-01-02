@@ -29,7 +29,7 @@ local modes = {
 
 local function mode()
 	local m = vim.api.nvim_get_mode().mode
-	local current_mode = "%#" .. modes[m][2] .. "#" .. "  " .. modes[m][1]
+	local current_mode = "%#" .. modes[m][2] .. "#" .. modes[m][1]
 
 	return table.concat({ current_mode })
 end
@@ -73,6 +73,7 @@ local function get_gitstatus()
 	local added = 0
 	local changed = 0
 	local removed = 0
+	local untracked = 0
 
 	for _, line in ipairs(lines) do
 		local start = string.sub(line, 1, 1)
@@ -83,13 +84,15 @@ local function get_gitstatus()
 			changed = changed + 1
 		elseif start == "D" then
 			removed = removed + 1
+		elseif start == "?" then
+			untracked = untracked + 1
 		end
 	end
 
 	local branch = vim.split(lines[1], "%.%.%.")[1]
 	local branch_name = string.gsub(branch, "## ", "")
 
-	return { head = branch_name, added = added, changed = changed, removed = removed }
+	return { head = branch_name, added = added, changed = changed, removed = removed, untracked = untracked }
 end
 
 local function git()
@@ -108,7 +111,11 @@ local function git()
 			and ("%#St_git_delete#" .. "  " .. git_status.removed)
 		or ""
 
-	return table.concat({ branch_name, added, changed, removed })
+	local untracked = (git_status.untracked and git_status.untracked ~= 0)
+			and ("%#St_git_untracked#" .. "  " .. git_status.untracked)
+		or ""
+
+	return table.concat({ branch_name, added, changed, removed, untracked })
 end
 local function lsp_diagnostics()
 	if not rawget(vim, "lsp") then
@@ -129,7 +136,8 @@ local function lsp_diagnostics()
 end
 
 function StatusLine()
-	return mode()
+	return spacer()
+		.. mode()
 		.. spacer()
 		.. spacer()
 		.. separator()

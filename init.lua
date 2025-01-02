@@ -7,6 +7,7 @@ local modules = {
 	"startup",
 	"startup.art",
 	"statusline",
+	"tabline",
 	"terminal",
 }
 
