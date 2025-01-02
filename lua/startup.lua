@@ -53,6 +53,9 @@ function M.Init()
 
 	M.ClearBuffer(buf)
 
+	vim.api.nvim_set_option_value("number", false, { win = 0 })
+	vim.api.nvim_set_option_value("relativenumber", false, { win = 0 })
+
 	local title = vim.split(M.title, "\n")
 	M.InsertToBuf(M.title_margin, title, buf, 0)
 

@@ -16,7 +16,7 @@ vim.api.nvim_create_autocmd("CmdwinEnter", {
 			col = 25,
 			width = 100,
 			height = 1,
-			border = "double",
+			border = "single",
 			style = "minimal",
 			title = "Cmd",
 		}
