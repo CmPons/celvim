@@ -49,7 +49,7 @@ end
 
 local function mode()
 	local m = vim.api.nvim_get_mode().mode
-	local current_mode = "%#" .. modes[m][2] .. "#" .. modes[m][1]
+	local current_mode = "%#" .. modes[m][2] .. "#" .. modes[m][1] .. " "
 	return table.concat({ current_mode })
 end
 
@@ -126,20 +126,21 @@ local function git()
 	end
 
 	local branch_name = "%#Normal#" .. "   " .. git_status.head .. " "
-	local added = (git_status.added and git_status.added ~= 0) and ("%#St_git_add#" .. "  " .. git_status.added)
-		or ""
+	-- To my confused future self: The highlight groups below are picked at random
+	-- from what exists in :hi already
+	local added = (git_status.added and git_status.added ~= 0) and ("%#@string#" .. "  " .. git_status.added) or ""
 	local changed = (git_status.changed and git_status.changed ~= 0)
-			and ("%#St_git_change#" .. "  " .. git_status.changed)
+			and ("%#@string.regexp#" .. "  " .. git_status.changed)
 		or ""
 	local removed = (git_status.removed and git_status.removed ~= 0)
-			and ("%#St_git_delete#" .. "  " .. git_status.removed)
+			and ("%#@comment.error#" .. "  " .. git_status.removed)
 		or ""
 
 	local untracked = (git_status.untracked and git_status.untracked ~= 0)
-			and ("%#St_git_untracked#" .. "  " .. git_status.untracked)
+			and ("%#@attribute#" .. "  " .. git_status.untracked)
 		or ""
 
-	return table.concat({ branch_name, added, changed, removed, untracked })
+	return table.concat({ branch_name, added, changed, removed, untracked, " " })
 end
 local function lsp_diagnostics()
 	if not rawget(vim, "lsp") then
@@ -159,10 +160,19 @@ local function lsp_diagnostics()
 	return errors_str .. warnings_str .. hints_str .. info_str
 end
 
+local function lsp_status()
+	local clients = vim.lsp.get_clients({ bufnr = 0 })
+	if #clients == 0 or not clients[1].initialized then
+		return "%#@comment.error#" .. "   "
+	end
+
+	return "%#@string#" .. " 󱘖   "
+end
+
 function StatusLine()
 	set_colors()
 
-	return mode() .. file_info() .. spacer() .. "%=" .. lsp_diagnostics() .. spacer() .. git() .. spacer()
+	return mode() .. file_info() .. spacer() .. "%=" .. lsp_status() .. lsp_diagnostics() .. git()
 end
 
 vim.o.statusline = "%!v:lua.StatusLine()"
