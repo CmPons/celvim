@@ -6,6 +6,17 @@ M.qf_win = nil
 local formatting = vim.api.nvim_create_augroup("LspFormatting", {})
 local lsp_funcs = vim.api.nvim_create_augroup("LspFuncs", {})
 
+local function clear_lsp_log()
+	local home = os.getenv("HOME")
+	local path = home .. "/.local/state/celvim/lsp.log"
+	os.remove(path)
+	local file = io.open(path, "w")
+	if file ~= nil then
+		file:write("")
+		file:close()
+	end
+end
+
 local function register_format_on_save(autocmd_group, bufnr)
 	-- Format on save
 	-- We MUST clear the autocmds before registering a new one! If not,
@@ -27,6 +38,9 @@ local function setup_language_servers()
 		group = lsp_funcs,
 		pattern = { "*.lua" },
 		callback = function(ev)
+			vim.wo.relativenumber = true
+			vim.wo.number = true
+
 			vim.lsp.start({
 				name = "lua-lsp-server",
 				cmd = { "lua-language-server" },
@@ -49,6 +63,7 @@ local function setup_language_servers()
 					},
 				},
 			})
+			vim.lsp.set_log_level("INFO")
 
 			register_format_on_save(formatting, ev.buf)
 		end,
@@ -58,11 +73,21 @@ local function setup_language_servers()
 	vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
 		pattern = { "*.rs" },
 		callback = function(ev)
+			vim.wo.relativenumber = true
+			vim.wo.number = true
+
+			-- Hack to disable other rust lsp, probably due to my nixos setup
+			local clients = vim.lsp.get_clients({ name = "rust-analyzer" })
+			if clients[1] ~= nil then
+				vim.lsp.stop_client(clients[1], true)
+			end
+
 			vim.lsp.start({
 				name = "rust-lsp",
 				cmd = { "rust-analyzer" },
 				root_dir = vim.fs.dirname(vim.fs.find({ "Cargo.lock" }, { upward = true })[1]),
 			})
+			vim.lsp.set_log_level("INFO")
 
 			register_format_on_save(formatting, ev.buf)
 		end,
@@ -96,7 +121,7 @@ local function setup_quick_fix()
 					group = lsp_funcs,
 					callback = function()
 						if M.preview_buf == nil and M.preview_win == nil then
-							M.preview_buf = vim.api.nvim_create_buf(false, false)
+							M.preview_buf = vim.api.nvim_create_buf(false, true)
 							local prev_config = {
 								relative = "editor",
 								row = 3,
@@ -127,7 +152,7 @@ local function setup_quick_fix()
 						local cursor = vim.split(line[2], " ")
 						local row, col = tonumber(cursor[1]), tonumber(cursor[3])
 						vim.api.nvim_win_set_cursor(M.preview_win, { row, col })
-						vim.api.nvim_buf_add_highlight(M.preview_buf, -1, "BufferVisible", row - 1, col - 1, -1)
+						vim.api.nvim_buf_add_highlight(M.preview_buf, -1, "BufferVisible", row - 1, 0, -1)
 					end,
 				})
 			end
@@ -189,6 +214,7 @@ local function setup_auto_complete()
 end
 
 M.Init = function()
+	clear_lsp_log()
 	setup_language_servers()
 	setup_quick_fix()
 	setup_auto_complete()

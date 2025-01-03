@@ -9,12 +9,8 @@ M.get_syntax_from_filetype = function(filetype)
 end
 
 M.get_filetype = function(file_name)
-	local dot_pos = string.find(file_name, "%.")
-	if dot_pos == nil then
-		return nil
-	end
-	local ext = string.sub(file_name, dot_pos + 1, -1)
-	return ext
+	local ext = file_name:match("^.+(%..+)$")
+	return ext:sub(2, #ext)
 end
 
 M.sanitize_terminal_name = function(buf_name)
