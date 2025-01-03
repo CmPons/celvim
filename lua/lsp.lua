@@ -65,28 +65,37 @@ M.Init = function()
 		end,
 	})
 
+	local qf_win = 0
 	vim.api.nvim_create_autocmd("BufWinEnter", {
 		group = lsp_funcs,
-		callback = function(ev)
+		callback = function()
 			local win_type = vim.fn.win_gettype()
-
 			if win_type == "quickfix" then
-				local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-				local height = #lines
-				if height > 10 then
-					height = 10
-				end
+				vim.cmd(":hi QuickFixLine NONE")
+				vim.cmd(":hi qfLineNr NONE")
 
+				qf_win = vim.api.nvim_get_current_win()
 				local config = {
 					relative = "editor",
 					row = 25,
-					col = 25,
-					width = 100,
-					height = #lines,
+					col = 10,
+					width = 125,
+					height = 5,
 					border = "single",
 					style = "minimal",
 				}
 				vim.api.nvim_win_set_config(0, config)
+			end
+		end,
+	})
+
+	vim.api.nvim_create_autocmd({ "BufLeave", "BufWinLeave" }, {
+		group = lsp_funcs,
+		callback = function()
+			if vim.api.nvim_get_current_win() == qf_win then
+				vim.schedule(function()
+					vim.api.nvim_win_close(qf_win, false)
+				end)
 			end
 		end,
 	})
