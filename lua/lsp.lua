@@ -1,24 +1,27 @@
 local M = {}
+M.preview_buf = nil
+M.preview_win = nil
+M.qf_win = nil
 
 local formatting = vim.api.nvim_create_augroup("LspFormatting", {})
 local lsp_funcs = vim.api.nvim_create_augroup("LspFuncs", {})
 
-M.Init = function()
-	local function register_format_on_save(autocmd_group, bufnr)
-		-- Format on save
-		-- We MUST clear the autocmds before registering a new one! If not,
-		-- we will overwrite any previous buffers!
-		vim.api.nvim_clear_autocmds({ group = autocmd_group })
-		vim.api.nvim_create_autocmd("BufWritePre", {
-			group = formatting,
-			callback = function()
-				-- Specify buffer explicitly instead of 0, to avoid an assert.
-				-- 0 works on previous version of neovim
-				vim.lsp.buf.format({ bufnr })
-			end,
-		})
-	end
+local function register_format_on_save(autocmd_group, bufnr)
+	-- Format on save
+	-- We MUST clear the autocmds before registering a new one! If not,
+	-- we will overwrite any previous buffers!
+	vim.api.nvim_clear_autocmds({ group = autocmd_group })
+	vim.api.nvim_create_autocmd("BufWritePre", {
+		group = formatting,
+		callback = function()
+			-- Specify buffer explicitly instead of 0, to avoid an assert.
+			-- 0 works on previous version of neovim
+			vim.lsp.buf.format({ bufnr })
+		end,
+	})
+end
 
+local function setup_language_servers()
 	-- lua-language-server setup
 	vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
 		group = lsp_funcs,
@@ -64,8 +67,9 @@ M.Init = function()
 			register_format_on_save(formatting, ev.buf)
 		end,
 	})
+end
 
-	local qf_win = 0
+local function setup_quick_fix()
 	vim.api.nvim_create_autocmd("BufWinEnter", {
 		group = lsp_funcs,
 		callback = function()
@@ -73,8 +77,9 @@ M.Init = function()
 			if win_type == "quickfix" then
 				vim.cmd(":hi QuickFixLine NONE")
 				vim.cmd(":hi qfLineNr NONE")
+				vim.keymap.set("n", "q", ":q<enter>", { buffer = vim.api.nvim_get_current_buf() })
 
-				qf_win = vim.api.nvim_get_current_win()
+				M.qf_win = vim.api.nvim_get_current_win()
 				local config = {
 					relative = "editor",
 					row = 25,
@@ -85,21 +90,90 @@ M.Init = function()
 					style = "minimal",
 				}
 				vim.api.nvim_win_set_config(0, config)
+
+				vim.api.nvim_create_autocmd({ "CursorMoved" }, {
+					buffer = vim.api.nvim_get_current_buf(),
+					group = lsp_funcs,
+					callback = function()
+						if M.preview_buf == nil and M.preview_win == nil then
+							M.preview_buf = vim.api.nvim_create_buf(false, false)
+							local prev_config = {
+								relative = "editor",
+								row = 3,
+								col = 10,
+								width = 125,
+								height = 20,
+								border = "single",
+								style = "minimal",
+							}
+							M.preview_win = vim.api.nvim_open_win(M.preview_buf, false, prev_config)
+						end
+
+						local line = vim.split(vim.api.nvim_get_current_line(), "|")
+						local file = line[1]
+						local lines = {}
+						for file_line in io.lines(file) do
+							lines[#lines + 1] = file_line
+						end
+						vim.api.nvim_buf_set_lines(M.preview_buf, 0, -1, false, lines)
+
+						local utils = require("utils")
+						local file_type = utils.get_filetype(file)
+						if file_type ~= nil then
+							vim.bo[M.preview_buf].filetype = file_type
+							vim.bo[M.preview_buf].syntax = utils.get_syntax_from_filetype(file_type)
+						end
+
+						local cursor = vim.split(line[2], " ")
+						local row, col = tonumber(cursor[1]), tonumber(cursor[3])
+						vim.api.nvim_win_set_cursor(M.preview_win, { row, col })
+						vim.api.nvim_buf_add_highlight(M.preview_buf, -1, "BufferVisible", row - 1, col - 1, -1)
+					end,
+				})
 			end
 		end,
 	})
 
-	vim.api.nvim_create_autocmd({ "BufLeave", "BufWinLeave" }, {
+	vim.api.nvim_create_autocmd({ "BufLeave" }, {
 		group = lsp_funcs,
 		callback = function()
-			if vim.api.nvim_get_current_win() == qf_win then
+			if vim.api.nvim_get_current_win() == M.qf_win then
 				vim.schedule(function()
-					vim.api.nvim_win_close(qf_win, false)
+					if M.qf_win ~= nil then
+						pcall(vim.api.nvim_win_close, M.qf_win, false)
+					end
+
+					if M.preview_win ~= nil then
+						pcall(vim.api.nvim_win_close, M.preview_win, false)
+					end
+
+					M.qf_win = nil
+					M.preview_win = nil
+					M.preview_buf = nil
 				end)
 			end
 		end,
 	})
 
+	vim.api.nvim_create_autocmd("WinClosed", {
+		group = lsp_funcs,
+		callback = function()
+			if vim.api.nvim_get_current_win() == M.qf_win then
+				vim.schedule(function()
+					if M.preview_win ~= nil then
+						vim.api.nvim_win_close(M.preview_win, false)
+					end
+
+					M.qf_win = nil
+					M.preview_win = nil
+					M.preview_buf = nil
+				end)
+			end
+		end,
+	})
+end
+
+local function setup_auto_complete()
 	vim.api.nvim_create_autocmd("InsertCharPre", {
 		group = lsp_funcs,
 		buffer = vim.api.nvim_get_current_buf(),
@@ -112,6 +186,12 @@ M.Init = function()
 			vim.api.nvim_feedkeys(key, "m", false)
 		end,
 	})
+end
+
+M.Init = function()
+	setup_language_servers()
+	setup_quick_fix()
+	setup_auto_complete()
 end
 
 M.Cleanup = function()

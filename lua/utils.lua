@@ -1,5 +1,13 @@
 local M = {}
 
+M.get_syntax_from_filetype = function(filetype)
+	if filetype == "rs" then
+		return "rust"
+	end
+
+	return filetype
+end
+
 M.get_filetype = function(file_name)
 	local dot_pos = string.find(file_name, "%.")
 	if dot_pos == nil then

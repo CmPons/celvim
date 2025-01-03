@@ -25,7 +25,8 @@ local function fuzzy_find()
 
 				local filetype = utils.get_filetype(file)
 				if filetype ~= nil then
-					vim.cmd("set filetype=" .. filetype)
+					vim.bo.filetype = filetype
+					vim.bo.syntax = utils.get_syntax_from_filetype(filetype)
 				end
 			end
 		end,

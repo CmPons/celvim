@@ -45,25 +45,28 @@ function M.Init()
 	vim.cmd("colorscheme nord")
 	vim.o.ruler = false
 
-	local buf = vim.api.nvim_create_buf(false, true)
+	-- If we are reloading the config, don't overwrite
+	-- whatever is currently open
+	if #vim.api.nvim_list_bufs() == 1 then
+		local buf = vim.api.nvim_create_buf(false, true)
+		M.buf = buf
 
-	M.buf = buf
+		vim.api.nvim_set_option_value("modifiable", true, { buf = buf })
 
-	vim.api.nvim_set_option_value("modifiable", true, { buf = buf })
+		M.ClearBuffer(buf)
 
-	M.ClearBuffer(buf)
+		vim.api.nvim_set_option_value("number", false, { win = 0 })
+		vim.api.nvim_set_option_value("relativenumber", false, { win = 0 })
 
-	vim.api.nvim_set_option_value("number", false, { win = 0 })
-	vim.api.nvim_set_option_value("relativenumber", false, { win = 0 })
+		local title = vim.split(M.title, "\n")
+		M.InsertToBuf(M.title_margin, title, buf, 0)
 
-	local title = vim.split(M.title, "\n")
-	M.InsertToBuf(M.title_margin, title, buf, 0)
+		local art = require("startup.art"):GetRandArt()
+		M.InsertToBuf(art.margin, art.text, buf, 7)
 
-	local art = require("startup.art"):GetRandArt()
-	M.InsertToBuf(art.margin, art.text, buf, 7)
-
-	vim.api.nvim_set_option_value("modifiable", false, { buf = buf })
-	vim.api.nvim_set_current_buf(buf)
+		vim.api.nvim_set_option_value("modifiable", false, { buf = buf })
+		vim.api.nvim_set_current_buf(buf)
+	end
 end
 
 return M
