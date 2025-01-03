@@ -68,12 +68,14 @@ local function file_info()
 
 	if filename ~= "Empty " then
 		local ext = utils.get_filetype(filename)
-		local icons = require("icons")
-		icon = icons[ext]
-		if icon == nil then
-			icon = ""
+		if ext ~= "" then
+			local icons = require("icons")
+			icon = icons[ext]
+			if icon == nil then
+				icon = ""
+			end
+			return table.concat({ "%#St_CurrentFile#", " ", icon, " ", filename, " " })
 		end
-		return table.concat({ "%#St_CurrentFile#", " ", icon, " ", filename, " " })
 	end
 
 	return ""

@@ -35,7 +35,6 @@ local function fuzzy_find()
 
 	vim.cmd.tabnew()
 
-	-- Nord color scheme for fzf
 	vim.cmd.term("fzf --preview 'bat --style=numbers --color=always --line-range :500 {}'")
 	vim.keymap.set("n", "<esc>", ":q<enter>", { buffer = vim.api.nvim_get_current_buf() })
 end

@@ -10,6 +10,10 @@ end
 
 M.get_filetype = function(file_name)
 	local ext = file_name:match("^.+(%..+)$")
+	if ext == nil then
+		return ""
+	end
+
 	return ext:sub(2, #ext)
 end
 
