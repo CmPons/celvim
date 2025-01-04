@@ -11,20 +11,28 @@ local Height = 1
 local MaxWidth = 50
 local MinWidth = 8
 
+local log_level_names = {
+	[vim.log.levels.DEBUG] = "debug",
+	[vim.log.levels.INFO] = "info",
+	[vim.log.levels.TRACE] = "trace",
+	[vim.log.levels.WARN] = "warning",
+	[vim.log.levels.ERROR] = "error",
+}
+
 local log_level_icons = {
-	["debug"] = "",
-	["info"] = "",
-	["trace"] = "",
-	["warn"] = "",
-	["error"] = "",
+	[vim.log.levels.DEBUG] = "",
+	[vim.log.levels.INFO] = "",
+	[vim.log.levels.TRACE] = "",
+	[vim.log.levels.WARN] = "",
+	[vim.log.levels.ERROR] = "",
 }
 
 local log_level_colors = {
-	["debug"] = "DiagnosticSignHint",
-	["info"] = "DiagnosticSignOk",
-	["trace"] = "DiagnosticSignHint",
-	["warn"] = "NotifyWARNBorder",
-	["error"] = "DiagnosticSignError",
+	[vim.log.levels.DEBUG] = "DiagnosticSignHint",
+	[vim.log.levels.INFO] = "DiagnosticSignOk",
+	[vim.log.levels.TRACE] = "DiagnosticSignHint",
+	[vim.log.levels.WARN] = "NotifyWARNBorder",
+	[vim.log.levels.ERROR] = "DiagnosticSignError",
 }
 
 local DefaultHighlight = "DiagnosticSignHint"
@@ -65,11 +73,27 @@ M.create_notification_win = function(msg, row, level)
 	return win
 end
 
+M.find_existing_notif = function(msg)
+	for _, notif in ipairs(M.shown_notifications) do
+		if notif.msg == msg then
+			return notif
+		end
+	end
+
+	return nil
+end
+
 M.update_notifications = function()
 	for _, notif in ipairs(M.pending_notifications) do
-		local win = M.create_notification_win(notif.msg, StartRow, notif.level)
-		notif.win = win
-		M.shown_notifications[#M.shown_notifications + 1] = notif
+		local existing_notif = M.find_existing_notif(notif.msg)
+		if existing_notif ~= nil then
+			-- Keep it alive
+			existing_notif.start = os.time()
+		else
+			local win = M.create_notification_win(notif.msg, StartRow, notif.level)
+			notif.win = win
+			M.shown_notifications[#M.shown_notifications + 1] = notif
+		end
 	end
 
 	M.pending_notifications = {}
@@ -88,7 +112,8 @@ M.update_notifications = function()
 		local notif = M.shown_notifications[i]
 		if now - notif.start > 5 then
 			table.remove(M.shown_notifications, i)
-			vim.api.nvim_win_close(notif.win, false)
+			local buf = vim.api.nvim_win_get_buf(notif.win)
+			vim.api.nvim_buf_delete(buf, { force = false })
 		end
 	end
 end
@@ -132,7 +157,8 @@ end
 
 M.format_log_msg = function(msg, level)
 	local util = require("utils")
-	return "[" .. util.get_curr_date_time() .. "] - " .. tostring(level) .. " - " .. msg
+	local log_name = log_level_names[level] or tostring(level)
+	return "[" .. util.get_curr_date_time() .. "] - " .. log_name .. " - " .. msg
 end
 
 M.push_log_msg = function(msg)
@@ -140,12 +166,14 @@ M.push_log_msg = function(msg)
 end
 
 function LogMsg(msg, level, _)
-	local log_msg = M.format_log_msg(msg, level)
+	local log_level = level or vim.log.levels.INFO
+
+	local log_msg = M.format_log_msg(msg, log_level)
 	M.push_log_msg(log_msg)
 
-	if level ~= "debug" then
+	if log_level ~= vim.log.levels.DEBUG then
 		M.pending_notifications[#M.pending_notifications + 1] =
-			{ start = os.time(), msg = msg, level = level, win = nil }
+			{ start = os.time(), msg = msg, level = log_level, win = nil }
 	end
 end
 
@@ -157,7 +185,7 @@ print = function(...)
 		table.insert(print_safe_args, tostring(_[i]))
 	end
 	local msg = table.concat(print_safe_args, " ")
-	vim.notify(msg, "debug")
+	vim.notify(msg, vim.log.levels.DEBUG)
 end
 
 return M

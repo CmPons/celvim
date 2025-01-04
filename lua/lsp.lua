@@ -32,6 +32,18 @@ local function register_format_on_save(autocmd_group, bufnr)
 	})
 end
 
+local function setup_handlers()
+	vim.api.nvim_create_autocmd("LspProgress", {
+		callback = function(ev)
+			local params = ev.data.params
+			local client = vim.lsp.get_client_by_id(ev.data.client_id)
+			if params.value.kind == "report" and client ~= nil then
+				vim.notify(client.name .. " -- " .. params.value.title)
+			end
+		end,
+	})
+end
+
 local function setup_language_servers()
 	-- lua-language-server setup
 	vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
@@ -83,7 +95,7 @@ local function setup_language_servers()
 			end
 
 			vim.lsp.start({
-				name = "rust-lsp",
+				name = "rust-analyzer",
 				cmd = { "rust-analyzer" },
 				root_dir = vim.fs.dirname(vim.fs.find({ "Cargo.lock" }, { upward = true })[1]),
 			})
@@ -215,6 +227,7 @@ local function setup_auto_complete()
 end
 
 M.Init = function()
+	setup_handlers()
 	clear_lsp_log()
 	setup_language_servers()
 	setup_quick_fix()
