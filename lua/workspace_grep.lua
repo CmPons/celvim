@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 local function workspace_search()
 	local augrp = vim.api.nvim_create_augroup("FzfAutocmds", { clear = true })
 	vim.api.nvim_create_autocmd("TermOpen", {
@@ -47,7 +45,12 @@ local function workspace_search()
 	})
 
 	vim.cmd.tabnew()
-	vim.cmd.term("./scripts/search.sh")
+
+	local home = os.getenv("HOME")
+	local app_name = os.getenv("NVIM_APPNAME") or "neovim"
+	local script_path = home .. "/.config/" .. app_name .. "/scripts/search.sh"
+
+	vim.cmd.term(script_path)
 	vim.keymap.set("n", "<esc>", ":q<enter>", { buffer = vim.api.nvim_get_current_buf() })
 end
 
