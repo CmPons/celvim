@@ -32,7 +32,3 @@ vim.cmd(":filetype plugin on")
 -- Suppress buffer written messages and fileinfo message when editing a file
 vim.cmd(":set shortmess +=F")
 vim.keymap.set("n", ":w", ":silent write<enter>")
-
--- TODO monkey patch these, then feed this into our own simple message system!
-vim.notify = function(msg, level, opts) end
-print = function(...) end

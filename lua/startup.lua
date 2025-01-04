@@ -50,6 +50,7 @@ function M.Init()
 	if #vim.api.nvim_list_bufs() == 1 then
 		local buf = vim.api.nvim_create_buf(false, true)
 		M.buf = buf
+		pcall(vim.api.nvim_buf_set_name, buf, "Startup")
 
 		vim.api.nvim_set_option_value("modifiable", true, { buf = buf })
 

@@ -36,4 +36,8 @@ M.sanitize_terminal_name = function(buf_name)
 	return prog_name
 end
 
+M.get_curr_date_time = function()
+	return os.date("%c")
+end
+
 return M

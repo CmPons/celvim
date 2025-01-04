@@ -99,6 +99,7 @@ local function setup_quick_fix()
 		group = lsp_funcs,
 		callback = function()
 			local win_type = vim.fn.win_gettype()
+
 			if win_type == "quickfix" then
 				vim.cmd(":hi QuickFixLine NONE")
 				vim.cmd(":hi qfLineNr NONE")

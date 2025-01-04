@@ -20,7 +20,7 @@ vim.keymap.set("n", "<Leader>fe", function()
 	vim.api.nvim_create_autocmd({ "BufLeave" }, {
 		callback = function()
 			vim.schedule(function()
-				vim.api.nvim_buf_delete(netrw_buf, {})
+				pcall(vim.api.nvim_buf_delete, netrw_buf, {})
 			end)
 		end,
 		buffer = netrw_buf,
