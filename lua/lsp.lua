@@ -45,15 +45,14 @@ local function setup_handlers()
 end
 
 local function setup_language_servers()
-    -- lua-language-server setup
-    vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
+    vim.api.nvim_create_autocmd({ "FileType" }, {
         group = lsp_funcs,
-        pattern = { "*.lua" },
-        callback = function(ev)
+        pattern = { "lua" },
+        callback = function()
             vim.wo.relativenumber = true
             vim.wo.number = true
-            vim.notify("lua-language-server starting")
 
+            vim.notify("Starting lua-language-server")
             vim.lsp.start({
                 name = "lua-lsp-server",
                 cmd = { "lua-language-server" },
@@ -77,8 +76,19 @@ local function setup_language_servers()
                 },
             })
             vim.lsp.set_log_level("INFO")
+        end
+    })
 
-            register_format_on_save(formatting, ev.buf)
+    -- lua-language-server setup
+    vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
+        group = lsp_funcs,
+        pattern = { "*.lua" },
+        callback = function(ev)
+            local clients = vim.lsp.get_clients({ name = "lua-lsp-server" })
+            if clients[1] ~= nil then
+                vim.lsp.buf_attach_client(0, clients[1].id)
+                register_format_on_save(formatting, ev.buf)
+            end
         end,
     })
 
@@ -123,7 +133,6 @@ local function setup_language_servers()
 
             clients = vim.lsp.get_clients({ name = "rust-lsp" })
             if clients[1] ~= nil then
-                print("Attaching to " .. tostring(ev.buf) .. " because of " .. ev.event)
                 vim.lsp.buf_attach_client(0, clients[1].id)
                 register_format_on_save(formatting, ev.buf)
             end
