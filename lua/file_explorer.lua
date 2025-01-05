@@ -3,6 +3,10 @@ M = {}
 local closed_folder = ""
 local open_folder = ""
 
+local curr_tree = nil
+local tree_root_path = ""
+local dir_ns = vim.api.nvim_create_namespace("#fe_dir")
+
 local function find_last_dir_idx(contents)
 	local last_idx = nil
 	for i, tree_node in ipairs(contents) do
@@ -23,7 +27,7 @@ local function traverse_file_tree(file_tree, indent, root_path, in_last_dir, vis
 	end
 
 	if file_tree.name == "." then
-		visitor(file_tree, indent, root_path)
+		visitor(file_tree, indent, root_path, nil)
 	end
 
 	local traverse = only_traverse_open == false
@@ -40,7 +44,7 @@ local function traverse_file_tree(file_tree, indent, root_path, in_last_dir, vis
 		local last_idx = find_last_dir_idx(file_tree.contents)
 
 		for i, v in ipairs(file_tree.contents) do
-			visitor(v, indent, root_path)
+			visitor(v, indent, root_path, file_tree)
 
 			if v.type == "directory" then
 				in_last_dir = (last_idx and last_idx == i) or false
@@ -50,15 +54,27 @@ local function traverse_file_tree(file_tree, indent, root_path, in_last_dir, vis
 	end
 end
 
+local function set_highlights(tree_root, root_path)
+	vim.api.nvim_buf_clear_namespace(0, dir_ns, 0, -1)
+	traverse_file_tree(tree_root, -1, root_path, false, function(node)
+		if node.type ~= "directory" or not node.is_visible then
+			return
+		end
+
+		vim.api.nvim_buf_add_highlight(0, dir_ns, "Type", node.line - 1, 0, -1)
+	end, true)
+end
+
 local function render_file_tree(tree_root, root_path)
 	local lines = {}
 	traverse_file_tree(tree_root, -1, root_path, false, function(node, indent, base_path)
 		if node.name == "." then
-			lines[#lines + 1] = base_path
+			lines[#lines + 1] = "  " .. open_folder .. " " .. base_path
+			node["line"] = #lines
 			return
 		end
 
-		local line = "  "
+		local line = "   "
 
 		for _ = 1, indent do
 			line = "  " .. line
@@ -82,11 +98,12 @@ local function render_file_tree(tree_root, root_path)
 		lines[#lines + 1] = line
 		node["line"] = #lines
 	end, true)
-	return lines
+	vim.api.nvim_buf_set_lines(0, 0, -1, false, lines)
+	set_highlights(tree_root, root_path)
 end
 
 local function setup_file_tree(tree_root, root_path)
-	traverse_file_tree(tree_root, -1, root_path, false, function(node, level, bash_path)
+	traverse_file_tree(tree_root, -1, root_path, false, function(node, level, bash_path, parent)
 		local path = ""
 		if node.type == "directory" then
 			path = bash_path .. "/" .. node.name .. "/"
@@ -100,28 +117,44 @@ local function setup_file_tree(tree_root, root_path)
 
 		node["path"] = path
 		node["is_open"] = node.name == "."
-		node["is_visible"] = level == 0
+		node["is_visible"] = level <= 0
+		node["parent"] = parent
 	end)
 end
 
-local curr_tree = nil
-local tree_root_path = ""
-
-local function on_select_line(dir_only)
+local function on_select_line(dir_only, close_parent)
 	dir_only = dir_only or false
+	close_parent = close_parent or false
+
 	local rerender = false
 	local pos = vim.api.nvim_win_get_cursor(0)
+
 	traverse_file_tree(curr_tree, -1, "", false, function(node)
 		if node.line ~= pos[1] or not node.is_visible then
+			return
+		end
+
+		if close_parent and node.parent ~= nil then
+			if node.parent.contents ~= nil and #node.parent.contents > 0 then
+				node.parent.is_open = false
+				vim.api.nvim_win_set_cursor(0, { node.parent.line, 0 })
+				for _, child in ipairs(node.parent.contents) do
+					child.is_visible = node.parent.is_open
+					child.line = -1
+				end
+			end
+			rerender = true
 			return
 		end
 
 		if node.type == "directory" then
 			node.is_open = not node.is_open
 
-			for _, child in ipairs(node.contents) do
-				child.is_visible = node.is_open
-				child.line = -1
+			if node.contents ~= nil and #node.contents > 0 then
+				for _, child in ipairs(node.contents) do
+					child.is_visible = node.is_open
+					child.line = -1
+				end
 			end
 
 			rerender = true
@@ -139,8 +172,7 @@ local function on_select_line(dir_only)
 	end)
 
 	if rerender then
-		local lines = render_file_tree(curr_tree, tree_root_path)
-		vim.api.nvim_buf_set_lines(0, 0, -1, false, lines)
+		render_file_tree(curr_tree, tree_root_path)
 	end
 end
 
@@ -176,7 +208,7 @@ local function open_file_explorer()
 		relative = "editor",
 		row = 0,
 		col = 0,
-		width = 50,
+		width = 60,
 		height = 140,
 		border = "single",
 		style = "minimal",
@@ -184,15 +216,14 @@ local function open_file_explorer()
 	}
 	vim.api.nvim_open_win(buf, true, config)
 
-	local lines = render_file_tree(curr_tree, tree_root_path)
-	vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+	render_file_tree(curr_tree, tree_root_path)
 
 	vim.keymap.set("n", "<enter>", function()
 		on_select_line()
 	end, { buffer = buf })
 
 	vim.keymap.set("n", "h", function()
-		on_select_line(true)
+		on_select_line(true, true)
 	end, { buffer = buf })
 
 	vim.keymap.set("n", "l", function()
