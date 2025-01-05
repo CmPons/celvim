@@ -121,6 +121,7 @@ local function on_select_line(dir_only)
 
 			for _, child in ipairs(node.contents) do
 				child.is_visible = node.is_open
+				child.line = -1
 			end
 
 			rerender = true
@@ -191,7 +192,7 @@ local function open_file_explorer()
 	end, { buffer = buf })
 
 	vim.keymap.set("n", "h", function()
-		on_select_line()
+		on_select_line(true)
 	end, { buffer = buf })
 
 	vim.keymap.set("n", "l", function()
