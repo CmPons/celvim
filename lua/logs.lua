@@ -119,6 +119,10 @@ M.update_notifications = function()
 end
 
 M.Init = function()
+	vim.api.nvim_create_user_command("ClearLogs", function()
+		M.log_lines = {}
+	end, {})
+
 	vim.api.nvim_create_user_command("Logs", function()
 		local buf = vim.api.nvim_create_buf(false, true)
 		pcall(vim.api.nvim_buf_set_name, buf, "Logs")
@@ -184,8 +188,12 @@ print = function(...)
 	for i = 1, #_ do
 		table.insert(print_safe_args, tostring(_[i]))
 	end
+
 	local msg = table.concat(print_safe_args, " ")
-	vim.notify(msg, vim.log.levels.DEBUG)
+	local msgs = vim.split(msg, "\n")
+	for _, m in ipairs(msgs) do
+		vim.notify(m, vim.log.levels.DEBUG)
+	end
 end
 
 return M

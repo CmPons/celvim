@@ -40,4 +40,16 @@ M.get_curr_date_time = function()
 	return os.date("%c")
 end
 
+M.dump_table = function(tbl, indent)
+	indent = indent or 0
+	for k, v in pairs(tbl) do
+		print(string.rep(" ", indent) .. tostring(k) .. ":")
+		if type(v) == "table" then
+			M.dump_table(v, indent + 2)
+		else
+			print(string.rep(" ", indent + 2) .. tostring(v))
+		end
+	end
+end
+
 return M
