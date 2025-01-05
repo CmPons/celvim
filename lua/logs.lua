@@ -102,9 +102,11 @@ M.update_notifications = function()
 	for i, notif in ipairs(M.shown_notifications) do
 		local zero_idx = i - 1
 		local row = StartRow - (zero_idx * Spacing)
-		local config = vim.api.nvim_win_get_config(notif.win)
-		config.row = row
-		vim.api.nvim_win_set_config(notif.win, config)
+		if vim.api.nvim_win_is_valid(notif.win) then
+			local config = vim.api.nvim_win_get_config(notif.win)
+			config.row = row
+			vim.api.nvim_win_set_config(notif.win, config)
+		end
 	end
 
 	local now = os.time()
@@ -112,8 +114,10 @@ M.update_notifications = function()
 		local notif = M.shown_notifications[i]
 		if now - notif.start > 5 then
 			table.remove(M.shown_notifications, i)
-			local buf = vim.api.nvim_win_get_buf(notif.win)
-			vim.api.nvim_buf_delete(buf, { force = false })
+			if vim.api.nvim_win_is_valid(notif.win) then
+				local buf = vim.api.nvim_win_get_buf(notif.win)
+				pcall(vim.api.nvim_buf_delete, buf, { force = false })
+			end
 		end
 	end
 end

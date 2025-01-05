@@ -82,26 +82,50 @@ local function setup_language_servers()
 	})
 
 	-- Rust language server setup
-	vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
-		pattern = { "*.rs" },
+	vim.api.nvim_create_autocmd({ "FileType" }, {
+		pattern = { "rs" },
 		callback = function(ev)
-			vim.wo.relativenumber = true
-			vim.wo.number = true
-
 			-- Hack to disable other rust lsp, probably due to my nixos setup
 			local clients = vim.lsp.get_clients({ name = "rust-analyzer" })
 			if clients[1] ~= nil then
 				vim.lsp.stop_client(clients[1], true)
 			end
 
+			clients = vim.lsp.get_clients({ name = "rust-lsp" })
+			if clients[1] ~= nil then
+				return
+			end
+
+			vim.wo.relativenumber = true
+			vim.wo.number = true
+			vim.notify("Starting rust-analyzer")
+
 			vim.lsp.start({
-				name = "rust-analyzer",
+				name = "rust-lsp",
 				cmd = { "rust-analyzer" },
 				root_dir = vim.fs.dirname(vim.fs.find({ "Cargo.lock" }, { upward = true })[1]),
 			})
 			vim.lsp.set_log_level("INFO")
 
 			register_format_on_save(formatting, ev.buf)
+		end,
+	})
+
+	vim.api.nvim_create_autocmd({ "TabNew", "TabEnter", "BufEnter", "BufWinEnter" }, {
+		pattern = { "*.rs" },
+		callback = function(ev)
+			-- Hack to disable other rust lsp, probably due to my nixos setup
+			local clients = vim.lsp.get_clients({ name = "rust-analyzer" })
+			if clients[1] ~= nil then
+				vim.lsp.stop_client(clients[1], true)
+			end
+
+			clients = vim.lsp.get_clients({ name = "rust-lsp" })
+			if clients[1] ~= nil then
+				print("Attaching to " .. tostring(ev.buf) .. " because of " .. ev.event)
+				vim.lsp.buf_attach_client(0, clients[1].id)
+				register_format_on_save(formatting, ev.buf)
+			end
 		end,
 	})
 end
@@ -199,7 +223,7 @@ local function setup_quick_fix()
 			if vim.api.nvim_get_current_win() == M.qf_win then
 				vim.schedule(function()
 					if M.preview_win ~= nil then
-						vim.api.nvim_win_close(M.preview_win, false)
+						pcall(vim.api.nvim_win_close, M.preview_win, false)
 					end
 
 					M.qf_win = nil
