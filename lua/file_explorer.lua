@@ -7,7 +7,7 @@ local curr_tree = nil
 local tree_root_path = ""
 local dir_ns = vim.api.nvim_create_namespace("#fe_dir")
 local fe_autocmds = vim.api.nvim_create_augroup("fe_au_cmds", {})
-local add_item_win = nil
+local adding_item = nil
 
 local function find_last_dir_idx(contents)
   local last_idx = nil
@@ -68,6 +68,7 @@ local function set_highlights(tree_root, root_path)
 end
 
 local function render_file_tree(tree_root, root_path)
+  vim.api.nvim_set_option_value("modifiable", true, { buf = 0 })
   local lines = {}
   traverse_file_tree(tree_root, -1, root_path, false, function(node, indent, base_path)
     if node.name == "." then
@@ -102,6 +103,7 @@ local function render_file_tree(tree_root, root_path)
   end, true)
   vim.api.nvim_buf_set_lines(0, 0, -1, false, lines)
   set_highlights(tree_root, root_path)
+  vim.api.nvim_set_option_value("modifiable", false, { buf = 0 })
 end
 
 local function setup_file_tree(tree_root, root_path)
@@ -235,14 +237,6 @@ local function on_add_item(curr_node, new_item_name)
     new_item_name = string.gsub(new_item_name, "/", "")
   end
 
-  parent.contents[#parent.contents + 1] = {
-    name = new_item_name,
-    path = path,
-    type = type,
-    is_open = false,
-    is_visible = false,
-    line = -1
-  }
 
   local home = os.getenv("HOME")
   if home == nil then
@@ -257,12 +251,96 @@ local function on_add_item(curr_node, new_item_name)
     res = vim.system({ "mkdir", absolute_path }):wait()
   end
 
-  if res.code == 0 then
-    render_file_tree(curr_tree, tree_root_path)
-  else
+  if res.code ~= 0 then
     vim.notify("Failed to create file item at " .. path, vim.log.levels.ERROR)
+    return
   end
+
+  parent.contents[#parent.contents + 1] = {
+    name = new_item_name,
+    path = path,
+    type = type,
+    parent = parent,
+    is_open = false,
+    is_visible = true,
+    line = -1,
+    contents = {}
+  }
+
+  render_file_tree(curr_tree, tree_root_path)
 end
+
+local function on_delete_item(curr_node)
+  local home = os.getenv("HOME")
+  if home == nil then
+    return
+  end
+  local absolute_path = string.gsub(curr_node.path, "~", home)
+
+  local res = vim.system({ "rm", "-rf", absolute_path }):wait()
+  print(res.stdout)
+  if res.code ~= 0 then
+    vim.notify("Failed to delete " .. curr_node.path, vim.log.levels.ERROR)
+    return
+  end
+
+  for i, node in ipairs(curr_node.parent.contents) do
+    if node.name == curr_node.name and node.path == curr_node.path then
+      table.remove(curr_node.parent.contents, i)
+    end
+  end
+
+  render_file_tree(curr_tree, tree_root_path)
+end
+
+local function on_open_delete_item_win()
+  local file_explorer = vim.api.nvim_get_current_win()
+  local pos = vim.api.nvim_win_get_cursor(0)
+  local curr_node = find_selected_node(pos[1])
+  if curr_node == nil then
+    return
+  end
+
+  local buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "y/n: " })
+
+  local config = {
+    relative = "editor",
+    row = pos[1],
+    col = pos[2],
+    width = 40,
+    height = 1,
+    border = "single",
+    style = "minimal",
+    title = "Delete " .. curr_node.name .. " ?",
+  }
+
+  adding_item = true
+  local win = vim.api.nvim_open_win(buf, true, config)
+  vim.api.nvim_win_set_cursor(win, { 1, 5 })
+
+  vim.keymap.set("n", "y", function()
+    vim.api.nvim_win_close(win, false)
+    vim.api.nvim_set_current_win(file_explorer)
+    on_delete_item(curr_node)
+    adding_item = false
+  end, { buffer = buf })
+
+  local abort_delete = function()
+    vim.api.nvim_win_close(win, false)
+    vim.api.nvim_set_current_win(file_explorer)
+    adding_item = false
+  end
+
+  vim.keymap.set("n", "<esc>", function()
+    abort_delete()
+  end, { buffer = buf })
+
+  vim.keymap.set("n", "n", function()
+    abort_delete()
+  end, { buffer = buf })
+end
+
 
 local function on_open_add_item_win()
   local file_explorer = vim.api.nvim_get_current_win()
@@ -270,7 +348,6 @@ local function on_open_add_item_win()
   local curr_node = find_selected_node(pos[1])
 
   local buf = vim.api.nvim_create_buf(false, true)
-
 
   local config = {
     relative = "editor",
@@ -344,7 +421,6 @@ local function open_file_explorer()
     title = "File Explorer",
   }
   vim.api.nvim_open_win(buf, true, config)
-  vim.api.nvim_set_option_value("modifiable", false, { buf = buf })
 
   render_file_tree(curr_tree, tree_root_path)
 
@@ -364,11 +440,6 @@ local function open_file_explorer()
     on_select_line(true)
   end, { buffer = buf })
 
-  -- To prevent creating another when it's already open
-  vim.keymap.set("n", "<leader>fe", function() end, {
-    buffer = buf,
-  })
-
   vim.keymap.set("n", "q", function()
     vim.api.nvim_buf_delete(0, {})
   end, { buffer = buf })
@@ -377,6 +448,14 @@ local function open_file_explorer()
     on_open_add_item_win()
   end, { buffer = buf })
 
+  vim.keymap.set("n", "d", function()
+    on_open_delete_item_win()
+  end, { buffer = buf })
+
+  -- To prevent creating another when it's already open
+  vim.keymap.set("n", "<leader>fe", function() end, {
+    buffer = buf,
+  })
 
   vim.api.nvim_create_autocmd({ "WinLeave", "BufLeave" }, {
     buffer = buf,
