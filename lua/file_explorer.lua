@@ -289,6 +289,7 @@ local function on_open_add_item_win()
     vim.api.nvim_win_close(win, false)
     vim.api.nvim_set_current_win(file_explorer)
     on_add_item(curr_node, line)
+    vim.cmd.stopinsert()
   end, { buffer = buf })
 
   vim.keymap.set("i", "<esc>", function()
