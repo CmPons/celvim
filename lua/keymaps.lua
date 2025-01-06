@@ -39,6 +39,22 @@ end, { desc = "List buffer symbols" })
 vim.keymap.set("n", "<leader>cr", vim.lsp.buf.rename, { desc = "Rename Symbol" })
 vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "Code Action" })
 
+vim.keymap.set("n", "[w", function()
+  vim.diagnostic.goto_prev({ severity = 2 })
+end, { desc = "Prev Error" })
+
+vim.keymap.set("n", "]w", function()
+  vim.diagnostic.goto_next({ severity = 2 })
+end, { desc = "Next Error" })
+
+vim.keymap.set("n", "[e", function()
+  vim.diagnostic.goto_prev({ severity = 1 })
+end, { desc = "Prev Error" })
+
+vim.keymap.set("n", "]e", function()
+  vim.diagnostic.goto_next({ severity = 1 })
+end, { desc = "Next Error" })
+
 -- Window switching
 vim.keymap.set("n", "<C-j>", "<C-w>j")
 vim.keymap.set("n", "<C-k>", "<C-w>k")

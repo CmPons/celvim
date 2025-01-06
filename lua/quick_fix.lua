@@ -117,9 +117,7 @@ local function setup_quick_fix()
     nested = true,
     group = quick_fix_funcs,
     callback = function()
-      local win_type = vim.fn.win_gettype()
-
-      if win_type == "quickfix" then
+      if vim.fn.win_gettype() == "quickfix" then
         on_enter_quick_fix()
       end
     end,
