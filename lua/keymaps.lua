@@ -1,7 +1,7 @@
 vim.g.mapleader = " "
 
 vim.keymap.set("n", "<Leader>c", "", { desc = "Config" })
-vim.keymap.set("n", "<Leader>cr", function()
+vim.keymap.set("n", "<Leader>rr", function()
   vim.cmd.Reload()
 end, { desc = "Reload" })
 
@@ -36,6 +36,7 @@ vim.keymap.set("n", "<leader>ss", function()
   vim.lsp.buf.document_symbol()
 end, { desc = "List buffer symbols" })
 
+vim.keymap.set("n", "<leader>cr", vim.lsp.buf.rename, { desc = "Rename Symbol" })
 vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "Code Action" })
 
 -- Window switching

@@ -14,12 +14,21 @@ local function setup_quick_fix()
       if win_type == "quickfix" then
         vim.cmd(":hi QuickFixLine NONE")
         vim.cmd(":hi qfLineNr NONE")
-        vim.keymap.set("n", "q", function()
-          vim.api.nvim_win_close(M.qf_win, false)
-          vim.api.nvim_win_close(M.preview_win, false)
+
+        local close_qf = function()
+          pcall(vim.api.nvim_win_close, M.qf_win, false)
+          pcall(vim.api.nvim_win_close, M.preview_win, false)
           M.qf_win = nil
           M.preview_buf = nil
           M.preview_buf = nil
+        end
+
+        vim.keymap.set("n", "<esc>", function()
+          close_qf()
+        end, { buffer = vim.api.nvim_get_current_buf() })
+
+        vim.keymap.set("n", "q", function()
+          close_qf()
         end, { buffer = vim.api.nvim_get_current_buf() })
 
         M.qf_win = vim.api.nvim_get_current_win()
@@ -58,19 +67,22 @@ local function setup_quick_fix()
             for file_line in io.lines(file) do
               lines[#lines + 1] = file_line
             end
-            vim.api.nvim_buf_set_lines(M.preview_buf, 0, -1, false, lines)
 
-            local utils = require("utils")
-            local file_type = utils.get_filetype(file)
-            if file_type ~= nil then
-              vim.bo[M.preview_buf].filetype = file_type
-              vim.bo[M.preview_buf].syntax = utils.get_syntax_from_filetype(file_type)
+            if M.preview_buf ~= nil then
+              vim.api.nvim_buf_set_lines(M.preview_buf, 0, -1, false, lines)
+
+              local utils = require("utils")
+              local file_type = utils.get_filetype(file)
+              if file_type ~= nil then
+                vim.bo[M.preview_buf].filetype = file_type
+                vim.bo[M.preview_buf].syntax = utils.get_syntax_from_filetype(file_type)
+              end
+
+              local cursor = vim.split(line[2], " ")
+              local row, col = tonumber(cursor[1]), tonumber(cursor[3])
+              vim.api.nvim_win_set_cursor(M.preview_win, { row, col })
+              vim.api.nvim_buf_add_highlight(M.preview_buf, -1, "BufferVisible", row - 1, 0, -1)
             end
-
-            local cursor = vim.split(line[2], " ")
-            local row, col = tonumber(cursor[1]), tonumber(cursor[3])
-            vim.api.nvim_win_set_cursor(M.preview_win, { row, col })
-            vim.api.nvim_buf_add_highlight(M.preview_buf, -1, "BufferVisible", row - 1, 0, -1)
           end,
         })
       end
@@ -119,6 +131,7 @@ end
 M.Init = function()
   setup_quick_fix()
 end
+
 M.Cleanup = function()
   vim.api.nvim_clear_autocmds({ group = quick_fix_funcs })
 end
