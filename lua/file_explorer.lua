@@ -7,6 +7,7 @@ local curr_tree = nil
 local tree_root_path = ""
 local dir_ns = vim.api.nvim_create_namespace("#fe_dir")
 local fe_autocmds = vim.api.nvim_create_augroup("fe_au_cmds", {})
+local add_item_win = nil
 
 local function find_last_dir_idx(contents)
   local last_idx = nil
@@ -191,7 +192,6 @@ local function on_select_line(dir_only, close_parent)
 
       assert(vim.fn.findfile(node.path) ~= "",
         "Trying to open a file that doesn't exist? " .. node.path)
-      vim.print("Opening file " .. node.path)
 
       vim.cmd.tabnew(node.path)
 
@@ -282,6 +282,8 @@ local function on_open_add_item_win()
     style = "minimal",
     title = "Add Item",
   }
+
+  adding_item = true
   local win = vim.api.nvim_open_win(buf, true, config)
 
   vim.keymap.set("i", "<enter>", function()
@@ -290,12 +292,14 @@ local function on_open_add_item_win()
     vim.api.nvim_set_current_win(file_explorer)
     on_add_item(curr_node, line)
     vim.cmd.stopinsert()
+    adding_item = false
   end, { buffer = buf })
 
   vim.keymap.set("i", "<esc>", function()
     vim.api.nvim_win_close(win, false)
     vim.api.nvim_set_current_win(file_explorer)
     vim.cmd.stopinsert()
+    adding_item = false
   end, { buffer = buf })
 
   vim.cmd.startinsert()
@@ -340,6 +344,7 @@ local function open_file_explorer()
     title = "File Explorer",
   }
   vim.api.nvim_open_win(buf, true, config)
+  vim.api.nvim_set_option_value("modifiable", false, { buf = buf })
 
   render_file_tree(curr_tree, tree_root_path)
 
@@ -373,10 +378,13 @@ local function open_file_explorer()
   end, { buffer = buf })
 
 
-  vim.api.nvim_create_autocmd({ "BufLeave" }, {
+  vim.api.nvim_create_autocmd({ "WinLeave", "BufLeave" }, {
     buffer = buf,
-    callback = function()
-      -- pcall(vim.api.nvim_buf_delete, 0, {})
+    group = fe_autocmds,
+    callback = function(ev)
+      if not adding_item then
+        pcall(vim.api.nvim_buf_delete, buf, {})
+      end
     end,
   })
 
