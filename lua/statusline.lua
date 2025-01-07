@@ -27,16 +27,20 @@ local modes = {
 	["!"] = { "SHELL", "St_TerminalMode" },
 }
 
+local nord_colors = require("nord.named_colors")
+
 local mode_color = {
-	["St_NormalMode"] = "#8fbcbb",
-	["St_InsertMode"] = "#a3be8c",
-	["St_TerminalMode"] = "#81a1c1",
-	["St_NTerminalMode"] = "#5e81ac",
-	["St_VisualMode"] = "#bf616a",
-	["St_ReplaceMode"] = "#d08770",
-	["St_SelectMode"] = "#ebcb8b",
-	["St_CommandMode"] = "#88c0d0",
-	["St_ConfirmMode"] = "#b48ead",
+	["St_NormalMode"] = nord_colors.green,
+	["St_InsertMode"] = nord_colors.orange,
+	["St_TerminalMode"] = nord_colors.orange,
+	["St_NTerminalMode"] = nord_colors.orange,
+	["St_VisualMode"] = nord_colors.purple,
+	["St_ReplaceMode"] = nord_colors.glacier,
+	["St_SelectMode"] = nord_colors.yellow,
+	["St_CommandMode"] = nord_colors.light_gray,
+	["St_ConfirmMode"] = nord_colors.light_gray_bright,
+	["St_File"] = nord_colors.blue,
+	["St_Error"] = nord_colors.red,
 }
 
 local function set_colors()
@@ -63,7 +67,13 @@ local function file_info()
 
 	local utils = require("utils")
 	if string.find(filename, ".") == nil or string.find(filename, ":") then
-		return table.concat({ "%#St_CurrentFile#", " ", " ", utils.sanitize_terminal_name(filename), " " })
+		return table.concat({
+			"%#St_File#",
+			" ",
+			" ",
+			utils.sanitize_terminal_name(filename),
+			" ",
+		})
 	end
 
 	if filename ~= "Empty " then
@@ -74,7 +84,14 @@ local function file_info()
 			if icon == nil then
 				icon = ""
 			end
-			return table.concat({ "%#St_CurrentFile#", " ", icon, " ", filename, " " })
+			return table.concat({
+				"%#St_File#",
+				" ",
+				icon,
+				" ",
+				filename,
+				" ",
+			})
 		end
 	end
 
@@ -184,10 +201,10 @@ local function lsp_diagnostics()
 	local hints = #vim.diagnostic.get(0, { severity = vim.diagnostic.severity.HINT })
 	local info = #vim.diagnostic.get(0, { severity = vim.diagnostic.severity.INFO })
 
-	local errors_str = (errors and errors > 0) and ("%#DiagnosticError#" .. " " .. errors .. " ") or ""
-	local warnings_str = (warnings and warnings > 0) and ("%#DiagnosticWarn#" .. " " .. warnings .. " ") or ""
-	local hints_str = (hints and hints > 0) and ("%#DiagnosticHint#" .. " " .. hints .. " ") or ""
-	local info_str = (info and info > 0) and ("%#DiagnosticInfo#" .. " " .. info .. " ") or ""
+	local errors_str = (errors and errors > 0) and ("%#DiagnosticError#" .. "  " .. errors .. " ") or ""
+	local warnings_str = (warnings and warnings > 0) and ("%#DiagnosticWarn#" .. "  " .. warnings .. " ") or ""
+	local hints_str = (hints and hints > 0) and ("%#DiagnosticHint#" .. "  " .. hints .. " ") or ""
+	local info_str = (info and info > 0) and ("%#DiagnosticInfo#" .. "  " .. info .. " ") or ""
 
 	return errors_str .. warnings_str .. hints_str .. info_str
 end
@@ -195,10 +212,10 @@ end
 local function lsp_status()
 	local clients = vim.lsp.get_clients({ bufnr = 0 })
 	if #clients == 0 or not clients[1].initialized then
-		return "%#@comment.error#" .. "   "
+		return "%#St_Error#" .. "   "
 	end
 
-	return "%#@string#" .. " 󱘖  "
+	return "%#St_NormalMode#" .. " 󱘖  "
 end
 
 function StatusLine()

@@ -438,7 +438,7 @@ local function open_file_explorer()
 
 	vim.keymap.set("n", "q", function()
 		vim.api.nvim_buf_delete(0, {})
-	end, { buffer = buf })
+	end, { buffer = buf, nowait = true })
 
 	vim.keymap.set("n", "a", function()
 		on_open_add_item_win()

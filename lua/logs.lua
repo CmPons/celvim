@@ -29,7 +29,7 @@ local log_level_icons = {
 
 local log_level_colors = {
 	[vim.log.levels.DEBUG] = "DiagnosticSignHint",
-	[vim.log.levels.INFO] = "DiagnosticSignOk",
+	[vim.log.levels.INFO] = "@string",
 	[vim.log.levels.TRACE] = "DiagnosticSignHint",
 	[vim.log.levels.WARN] = "NotifyWARNBorder",
 	[vim.log.levels.ERROR] = "DiagnosticSignError",
@@ -147,7 +147,12 @@ M.Init = function()
 			vim.api.nvim_win_set_cursor(win, { #M.log_lines, 0 })
 		end
 
-		vim.keymap.set("n", "q", ":q<enter>", { buffer = M.log_buf })
+		vim.keymap.set("n", "<esc>", function()
+			if win ~= nil and vim.api.nvim_win_is_valid(win) then
+				vim.api.nvim_win_close(win, true)
+				win = nil
+			end
+		end, { buffer = M.log_buf })
 	end, {})
 
 	vim.keymap.set("n", "<leader>l", ":Logs<enter>", { desc = "Open the logs window" })

@@ -80,7 +80,7 @@ local function setup_qf_keymaps()
 
 	vim.keymap.set("n", "q", function()
 		close_qf()
-	end, { buffer = vim.api.nvim_get_current_buf() })
+	end, { buffer = vim.api.nvim_get_current_buf(), nowait = true })
 
 	vim.keymap.set("n", "<enter>", function()
 		local line = vim.api.nvim_get_current_line()
