@@ -81,42 +81,74 @@ local function file_info()
 	return ""
 end
 
+local git_cache = {
+	status = nil,
+	timer = nil,
+}
+
+-- Setup timer for git status updates
+local function setup_git_timer()
+	local timer = vim.loop.new_timer()
+	timer:start(
+		0,
+		1000,
+		vim.schedule_wrap(function()
+			local git_status = vim.system({ "git", "status", "-bs" }):wait()
+			if git_status.code == 0 then
+				local lines = vim.split(git_status.stdout, "\n")
+				if #lines > 0 then
+					local added = 0
+					local changed = 0
+					local removed = 0
+					local untracked = 0
+
+					for _, line in ipairs(lines) do
+						local start = string.sub(line, 2, 2)
+						if start == "A" then
+							added = added + 1
+						elseif start == "M" or start == "R" or start == "C" then
+							changed = changed + 1
+						elseif start == "D" then
+							removed = removed + 1
+						elseif start == "?" then
+							untracked = untracked + 1
+						end
+					end
+
+					local branch = vim.split(lines[1], "%.%.%.")[1]
+					local branch_name = string.gsub(branch, "## ", "")
+
+					git_cache.status = {
+						head = branch_name,
+						added = added,
+						changed = changed,
+						removed = removed,
+						untracked = untracked,
+					}
+				end
+			else
+				git_cache.status = nil
+			end
+		end)
+	)
+	return timer
+end
+
+-- Start the timer when Neovim starts
+git_cache.timer = setup_git_timer()
 local function get_gitstatus()
-	local git_status = vim.system({ "git", "status", "-bs" }):wait()
-	if git_status.code ~= 0 then
-		return nil
+	local status = git_cache.status
+	if status == nil then
+		return
 	end
 
-	local lines = vim.split(git_status.stdout, "\n")
-	if #lines == 0 then
-		return nil
-	end
-
-	local added = 0
-	local changed = 0
-	local removed = 0
-	local untracked = 0
-
-	for _, line in ipairs(lines) do
-		local start = string.sub(line, 2, 2)
-		if start == "A" then
-			added = added + 1
-			-- Modified, renamed or copied
-		elseif start == "M" or start == "R" or start == "C" then
-			changed = changed + 1
-		elseif start == "D" then
-			removed = removed + 1
-		elseif start == "?" then
-			untracked = untracked + 1
-		end
-	end
-
-	-- print("Git add " .. added .. " changed " .. changed)
-
-	local branch = vim.split(lines[1], "%.%.%.")[1]
-	local branch_name = string.gsub(branch, "## ", "")
-
-	return { head = branch_name, added = added, changed = changed, removed = removed, untracked = untracked }
+	return {
+		head = status.head,
+		added = status.added,
+		changed = status.changed,
+		removed = status.removed,
+		untracked = status.untracked,
+	}
 end
 
 local function git()
@@ -170,9 +202,8 @@ local function lsp_status()
 end
 
 function StatusLine()
-	set_colors()
-
 	return mode() .. file_info() .. spacer() .. "%=" .. lsp_status() .. lsp_diagnostics() .. git()
 end
 
+set_colors()
 vim.o.statusline = "%!v:lua.StatusLine()"
