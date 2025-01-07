@@ -1,5 +1,7 @@
 local modules = {
-	"cmdwin",
+	"ui",
+	"ui.popup",
+	"ui.cmdwin",
 	"keymaps",
 	"file_explorer",
 	"file_finder",

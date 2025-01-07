@@ -15,18 +15,8 @@ vim.keymap.set("n", "q:", ":", { nowait = true })
 vim.ui_attach(cmd_ns, {
 	ext_cmdline = true,
 }, function(event, kind, ...)
-	local args = { ... }
-	local msg = {
-		fast = vim.in_fast_event(),
-		e = event or "none",
-		k = kind or "none",
-		args = args,
-	}
-
-	print(vim.inspect(msg))
-
 	if event == "cmdline_show" then
-		local cursor_pos, firstc, prompt, indent, level, hl_id = ...
+		local _, firstc, prompt, indent, _, _ = ...
 
 		local config = configs[firstc] or { title = "cmd", color = "@string" }
 

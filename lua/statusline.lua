@@ -212,7 +212,7 @@ end
 local function lsp_status()
 	local clients = vim.lsp.get_clients({ bufnr = 0 })
 	if #clients == 0 or not clients[1].initialized then
-		return "%#St_Error#" .. "   "
+		return ""
 	end
 
 	return "%#St_NormalMode#" .. " 󱘖  "

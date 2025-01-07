@@ -253,6 +253,10 @@ local function on_add_item(curr_node, new_item_name)
 		return
 	end
 
+	if parent.contents == nil then
+		parent.contents = {}
+	end
+
 	parent.contents[#parent.contents + 1] = {
 		name = new_item_name,
 		path = path,
