@@ -30,6 +30,11 @@ local function get_tab_label(n)
 	local current_buf = vim.api.nvim_win_get_buf(current_win)
 	local file_name = vim.api.nvim_buf_get_name(current_buf)
 
+	local modified = ""
+	if vim.bo[current_buf].modified then
+		modified = ""
+	end
+
 	local utils = require("utils")
 	if string.find(file_name, "term://") ~= nil then
 		return " " .. utils.sanitize_terminal_name(file_name)
@@ -44,7 +49,7 @@ local function get_tab_label(n)
 	local utils = require("utils")
 	local icon = icons[utils.get_filetype(file_name)]
 	if icon ~= nil then
-		return icon .. space .. file_name
+		return icon .. space .. file_name .. modified
 	end
 	return file_name
 end
