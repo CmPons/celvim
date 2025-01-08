@@ -42,6 +42,23 @@ local function get_tab_label(n)
 
 	file_name = vim.api.nvim_call_function("fnamemodify", { file_name, ":p:t" })
 	if file_name == "" then
+		-- To fix an issue when we have a cmdline open.
+		-- In that case the filename is empty, so fallback to
+		-- a buffer with an actual name
+		local wins = vim.api.nvim_tabpage_list_wins(n)
+		for _, win in ipairs(wins) do
+			local buf = vim.api.nvim_win_get_buf(win)
+			local buf_name = vim.api.nvim_buf_get_name(buf)
+			buf_name = vim.api.nvim_call_function("fnamemodify", { buf_name, ":p:t" })
+			if buf_name ~= "" then
+				file_name = buf_name
+				current_buf = buf
+				break
+			end
+		end
+	end
+
+	if file_name == "" then
 		return "No Name"
 	end
 
