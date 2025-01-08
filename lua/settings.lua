@@ -32,4 +32,4 @@ vim.cmd(":filetype plugin on")
 -- -- Suppress buffer written messages and fileinfo message when editing a file
 vim.cmd(":set shortmess +=F")
 -- Replace :w with silent :w
-vim.cmd("cabbrev w silent write")
+-- vim.cmd("cabbrev w silent write")

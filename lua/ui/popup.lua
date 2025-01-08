@@ -20,6 +20,18 @@ local function get_window_position(row, col)
 	if row == 0 and col == 0 then
 		return popup.config.default_row, popup.config.default_col
 	end
+
+	-- Check if we should render the popup above
+	local cursor_pos = vim.api.nvim_win_get_cursor(0)
+	local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+	local height = #popup.items < popup.config.max_height and #popup.items or popup.config.max_height
+	local render_above = (#lines - cursor_pos[1]) < height
+
+	if render_above then
+		row = row - height
+		return row, col
+	end
+
 	return row + 1, col
 end
 
