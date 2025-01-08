@@ -30,7 +30,8 @@ local function get_window_position(row, col)
 	local render_above = (#lines - cursor_pos[1]) < height
 
 	if render_above then
-		row = row - height
+		-- -2 for the border
+		row = row - height - 2
 		return row, col
 	end
 
@@ -70,10 +71,8 @@ local function create_popup_window(row, col, width, height)
 		width = width,
 		height = height,
 		style = "minimal",
-		border = "none",
+		border = "single",
 	})
-
-	vim.fn.setwinvar(win, "&winhl", "Normal:ColorColumn")
 
 	return buf, win
 end
