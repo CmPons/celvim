@@ -5,6 +5,12 @@ local M = {}
 local formatting = vim.api.nvim_create_augroup("LspFormatting", {})
 local lsp_funcs = vim.api.nvim_create_augroup("LspFuncs", {})
 
+-- Make sure the hover window can't be focused
+vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
+	focusable = false,
+	border = "single",
+})
+
 local function setup_auto_complete()
 	vim.api.nvim_create_autocmd("InsertCharPre", {
 		group = lsp_funcs,
@@ -20,8 +26,36 @@ local function setup_auto_complete()
 				return
 			end
 
-			local key = vim.keycode("<C-x><C-o>")
-			vim.api.nvim_feedkeys(key, "m", false)
+			local char = vim.v.char
+			if char == "(" or char == "," or char == "<" then
+				local curr_buf = vim.api.nvim_get_current_win()
+				local pos = vim.api.nvim_win_get_cursor(0)
+				local row, col = pos[1], pos[2]
+
+				-- Schedule is needed, probably because we are in textlock? idk
+				-- If not, no window seems to show
+				vim.schedule(function()
+					local curr_line = vim.api.nvim_get_current_line()
+					local orig_pos = { row, col + 1 }
+					if char == "(" or char == "<" then
+						col = col - 1
+					elseif char == "," then
+						local paren = curr_line:find("%(")
+						if paren ~= nil then
+							col = paren - 1
+						else
+							col = col - 1
+						end
+					end
+
+					vim.api.nvim_win_set_cursor(0, { row, col })
+					vim.lsp.buf.hover()
+					vim.api.nvim_win_set_cursor(0, orig_pos)
+				end)
+			elseif char ~= ")" and char ~= ">" then
+				local key = vim.keycode("<C-x><C-o>")
+				vim.api.nvim_feedkeys(key, "m", false)
+			end
 		end,
 	})
 end
@@ -79,7 +113,7 @@ local function setup_language_servers()
 				setup_auto_complete()
 				register_format_on_save(formatting, ev.buf)
 
-				vim.lsp.set_log_level("INFO")
+				vim.lsp.set_log_level("debug")
 			end,
 		})
 
