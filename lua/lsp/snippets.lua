@@ -33,18 +33,11 @@ local function on_complete_done()
 	local completed_item = vim.v.completed_item
 
 	if completed_item.kind == "Snippet" then
-		local row = vim.api.nvim_win_get_cursor(0)[1] - 1
-		vim.api.nvim_buf_set_lines(0, row, row + 1, false, {})
+		local curr_line = vim.api.nvim_get_current_line()
+		local new_line = curr_line:sub(1, #curr_line - #completed_item.abbr)
+		vim.api.nvim_set_current_line(new_line)
 
 		local snippet_text = completed_item.user_data.nvim.lsp.completion_item.insertText
-
-		local snippet_lines = vim.split(snippet_text, "\n")
-		local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-
-		-- This seems to stop us from overwriting any other lines
-		table.insert(lines, row + 1, "")
-
-		vim.api.nvim_buf_set_lines(0, 0, -1, false, lines)
 
 		vim.snippet.expand(snippet_text)
 		vim.api.nvim_del_autocmd(complete_done)
