@@ -25,13 +25,24 @@ local function set_colours()
 	vim.api.nvim_command("hi TabLineFill guibg=None gui=None")
 end
 
+local function any_bufs_modified(tab_nr)
+	local wins = vim.api.nvim_tabpage_list_wins(tab_nr)
+	for _, win in ipairs(wins) do
+		local buf = vim.api.nvim_win_get_buf(win)
+		if vim.bo[buf].modified then
+			return true
+		end
+	end
+	return false
+end
+
 local function get_tab_label(n)
 	local current_win = vim.api.nvim_tabpage_get_win(n)
 	local current_buf = vim.api.nvim_win_get_buf(current_win)
 	local file_name = vim.api.nvim_buf_get_name(current_buf)
 
 	local modified = ""
-	if vim.bo[current_buf].modified then
+	if any_bufs_modified(n) then
 		modified = ""
 	end
 

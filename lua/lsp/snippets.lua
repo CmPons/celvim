@@ -1,4 +1,5 @@
-local snippet_funcs = vim.api.nvim_create_augroup("LspFuncs", {})
+local snippet_funcs = vim.api.nvim_create_augroup("SnippetFuncs", {})
+
 vim.keymap.set("i", "<CR>", function()
 	if vim.fn.pumvisible() == 1 then
 		return "<C-y>"
@@ -30,7 +31,6 @@ end
 local complete_done = nil
 local function on_complete_done()
 	local completed_item = vim.v.completed_item
-	print("Inserting completion text ", vim.inspect(completed_item), "Already active?", vim.snippet.active())
 
 	if completed_item.kind == "Snippet" then
 		local row = vim.api.nvim_win_get_cursor(0)[1] - 1

@@ -1,4 +1,5 @@
 local modules = {
+	"logs",
 	"ui",
 	"ui.popup",
 	"ui.cmdwin",
@@ -8,7 +9,6 @@ local modules = {
 	"file_finder",
 	"lsp",
 	"lsp.snippets",
-	"logs",
 	"quick_fix",
 	"settings",
 	"startup",
