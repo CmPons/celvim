@@ -7,6 +7,7 @@ local modules = {
 	"file_explorer",
 	"file_finder",
 	"lsp",
+	"lsp.snippets",
 	"logs",
 	"quick_fix",
 	"settings",
