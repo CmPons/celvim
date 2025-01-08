@@ -5,12 +5,61 @@ local M = {}
 local formatting = vim.api.nvim_create_augroup("LspFormatting", {})
 local lsp_funcs = vim.api.nvim_create_augroup("LspFuncs", {})
 
+vim.keymap.set("i", "<CR>", function()
+	if vim.fn.pumvisible() == 1 then
+		return "<C-y>"
+	else
+		return "<CR>"
+	end
+end, { expr = true })
+
+vim.keymap.set({ "i", "s" }, "<Tab>", function()
+	if vim.snippet.active({ direction = 1 }) then
+		return "<cmd>lua vim.snippet.jump(1)<CR>"
+	else
+		return "<Tab>"
+	end
+end, { expr = true })
+
+local orig_complete = vim.fn.complete
+vim.fn.complete = function(findstart, items)
+	if type(items) == "table" then
+		for _, item in ipairs(items) do
+			if item.kind == "Snippet" then
+				item.word = item.abbr
+			end
+		end
+	end
+	return orig_complete(findstart, items)
+end
+
+vim.api.nvim_create_autocmd("CompleteDone", {
+	group = lsp_funcs,
+	callback = function()
+		local completed_item = vim.v.completed_item
+		print(vim.inspect(completed_item))
+
+		if completed_item.kind == "Snippet" then
+			local row = vim.api.nvim_win_get_cursor(0)[1] - 1
+			vim.api.nvim_buf_set_lines(0, row, row + 1, false, {})
+
+			local snippet_text = completed_item.user_data.nvim.lsp.completion_item.insertText
+			vim.snippet.expand(snippet_text)
+		end
+	end,
+})
+
 local function setup_auto_complete()
 	vim.api.nvim_create_autocmd("InsertCharPre", {
 		group = lsp_funcs,
 		buffer = vim.api.nvim_get_current_buf(),
 		callback = function()
-			if vim.fn.pumvisible() == 1 or vim.fn.state("m") == "m" then
+			if
+				vim.fn.pumvisible() == 1
+				or vim.fn.state("m") == "m"
+				or vim.fn.state("a") == "a"
+				or vim.snippet.active()
+			then
 				return
 			end
 
