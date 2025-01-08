@@ -33,18 +33,41 @@ vim.fn.complete = function(findstart, items)
 	return orig_complete(findstart, items)
 end
 
-vim.api.nvim_create_autocmd("CompleteDone", {
+local complete_done = nil
+local function on_complete_done()
+	local completed_item = vim.v.completed_item
+	print("Inserting completion text ", vim.inspect(completed_item), "Already active?", vim.snippet.active())
+
+	if completed_item.kind == "Snippet" then
+		local row = vim.api.nvim_win_get_cursor(0)[1] - 1
+		vim.api.nvim_buf_set_lines(0, row, row + 1, false, {})
+
+		local snippet_text = completed_item.user_data.nvim.lsp.completion_item.insertText
+
+		local snippet_lines = vim.split(snippet_text, "\n")
+		local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+
+		-- This seems to stop us from overwriting any other lines
+		table.insert(lines, row + 1, "")
+
+		vim.api.nvim_buf_set_lines(0, 0, -1, false, lines)
+
+		vim.snippet.expand(snippet_text)
+		vim.api.nvim_del_autocmd(complete_done)
+		complete_done = nil
+	end
+end
+
+vim.api.nvim_create_autocmd("CompleteChanged", {
 	group = lsp_funcs,
 	callback = function()
-		local completed_item = vim.v.completed_item
-		print(vim.inspect(completed_item))
-
-		if completed_item.kind == "Snippet" then
-			local row = vim.api.nvim_win_get_cursor(0)[1] - 1
-			vim.api.nvim_buf_set_lines(0, row, row + 1, false, {})
-
-			local snippet_text = completed_item.user_data.nvim.lsp.completion_item.insertText
-			vim.snippet.expand(snippet_text)
+		if complete_done == nil then
+			complete_done = vim.api.nvim_create_autocmd({ "CompleteDone" }, {
+				group = lsp_funcs,
+				callback = function()
+					on_complete_done()
+				end,
+			})
 		end
 	end,
 })
@@ -53,9 +76,10 @@ local function setup_auto_complete()
 	vim.api.nvim_create_autocmd("InsertCharPre", {
 		group = lsp_funcs,
 		buffer = vim.api.nvim_get_current_buf(),
+		nested = false,
 		callback = function()
 			if
-				vim.fn.pumvisible() == 1
+				vim.fn.pumvisible() ~= 0
 				or vim.fn.state("m") == "m"
 				or vim.fn.state("a") == "a"
 				or vim.snippet.active()
