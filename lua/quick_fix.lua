@@ -35,8 +35,13 @@ local function setup_preview_win()
 		buffer = vim.api.nvim_get_current_buf(),
 		group = quick_fix_funcs,
 		callback = function()
-			local line = vim.split(vim.api.nvim_get_current_line(), "|")
+			local line = vim.split(vim.api.nvim_get_current_line(), "|", { trimempty = true })
 			local file = line[1]
+			if #line < 3 or vim.fn.isdirectory(file) == 1 then
+				warn("Failed to setup preview for file", file)
+				return
+			end
+
 			local lines = {}
 			for file_line in io.lines(file) do
 				lines[#lines + 1] = file_line

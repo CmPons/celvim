@@ -253,7 +253,8 @@ M.push_log_msg = function(msg)
 	end
 end
 
-function LogMsg(msg, level, _)
+function LogMsg(msg, level, _, silent)
+	silent = silent or false
 	local log_level = level or vim.log.levels.INFO
 
 	local msg_lines = vim.split(msg, "\n")
@@ -262,22 +263,36 @@ function LogMsg(msg, level, _)
 		M.push_log_msg(log_msg)
 	end
 
-	if log_level ~= vim.log.levels.DEBUG then
+	if log_level ~= vim.log.levels.DEBUG and not silent then
 		M.pending_notifications[#M.pending_notifications + 1] =
 			{ start = os.time(), msg = msg, level = log_level, win = nil }
 	end
 end
 
 vim.notify = LogMsg
-print = function(...)
+local function string_from_variadic(...)
 	local print_safe_args = {}
 	local _ = { ... }
 	for i = 1, #_ do
 		table.insert(print_safe_args, tostring(_[i]))
 	end
 
-	local msg = table.concat(print_safe_args, " ")
+	return table.concat(print_safe_args, " ")
+end
+
+print = function(...)
+	local msg = string_from_variadic(...)
 	vim.notify(msg, vim.log.levels.DEBUG)
+end
+
+_G.warn = function(...)
+	local msg = string_from_variadic(...)
+	LogMsg(msg, vim.log.levels.WARN, _, true)
+end
+
+_G.error = function(...)
+	local msg = string_from_variadic(...)
+	LogMsg(msg, vim.log.levels.ERROR, _, true)
 end
 
 return M
