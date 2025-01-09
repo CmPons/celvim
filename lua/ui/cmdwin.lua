@@ -61,9 +61,8 @@ local function on_hide_cmdline()
 	end
 end
 
-vim.ui_attach(cmd_ns, {
-	ext_cmdline = true,
-}, function(event, kind, ...)
+---@type fun(event: string, kind: string, ...): boolean
+local function callback(event, kind, ...)
 	if event == "cmdline_show" then
 		local _, firstc, prompt, indent, _, _ = ...
 		local config = configs[firstc] or { title = "cmd", color = "@string" }
@@ -79,4 +78,8 @@ vim.ui_attach(cmd_ns, {
 	end
 
 	return false
-end)
+end
+
+vim.ui_attach(cmd_ns, {
+	ext_cmdline = true,
+}, callback)

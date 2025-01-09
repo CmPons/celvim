@@ -123,7 +123,7 @@ local function on_popup_selected(selected)
 	update_popup(popup.items, selected, popup.current_pos.row, popup.current_pos.col)
 end
 
-local function on_popup_hide()
+local function on_popup_hide(_)
 	if popup.win and vim.api.nvim_win_is_valid(popup.win) then
 		vim.api.nvim_win_close(popup.win, true)
 		popup.win = nil
@@ -131,10 +131,9 @@ local function on_popup_hide()
 	end
 end
 
--- Note, we use vim.schedule here because for some reason script errors aren't reported in ui_attach!
-vim.ui_attach(popup.ns, {
-	ext_popupmenu = true,
-}, function(event, ...)
+---@type fun(event: string, ...): boolean
+local function callback(event, ...)
+	-- Note, we use vim.schedule here because for some reason script errors aren't reported in ui_attach!
 	if event == "popupmenu_show" then
 		local items, selected, row, col, grid = ...
 		vim.schedule(function()
@@ -155,4 +154,8 @@ vim.ui_attach(popup.ns, {
 		return true
 	end
 	return false
-end)
+end
+
+vim.ui_attach(popup.ns, {
+	ext_popupmenu = true,
+}, callback)

@@ -44,9 +44,17 @@ M.create_notification_win = function(msg, row, level)
 	end
 
 	local buf = vim.api.nvim_create_buf(false, true)
-	vim.api.nvim_buf_set_lines(buf, 0, -1, false, { msg })
-	local width = #msg
-	if width > MaxWidth then
+	local lines = vim.split(msg, "\n", { plain = true })
+	vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+
+	local width = 0
+	for _, line in ipairs(lines) do
+		if #line > width then
+			width = #line
+		end
+	end
+
+	if width > MaxWidth and not level == vim.log.levels.ERROR then
 		width = MaxWidth
 	end
 	if width < MinWidth then
@@ -188,8 +196,11 @@ end
 function LogMsg(msg, level, _)
 	local log_level = level or vim.log.levels.INFO
 
-	local log_msg = M.format_log_msg(msg, log_level)
-	M.push_log_msg(log_msg)
+	local msg_lines = vim.split(msg, "\n")
+	for _, line in ipairs(msg_lines) do
+		local log_msg = M.format_log_msg(line, log_level)
+		M.push_log_msg(log_msg)
+	end
 
 	if log_level ~= vim.log.levels.DEBUG then
 		M.pending_notifications[#M.pending_notifications + 1] =
@@ -206,10 +217,7 @@ print = function(...)
 	end
 
 	local msg = table.concat(print_safe_args, " ")
-	local msgs = vim.split(msg, "\n")
-	for _, m in ipairs(msgs) do
-		vim.notify(m, vim.log.levels.DEBUG)
-	end
+	vim.notify(msg, vim.log.levels.DEBUG)
 end
 
 return M
