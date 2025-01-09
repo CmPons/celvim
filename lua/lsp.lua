@@ -132,8 +132,34 @@ local function setup_language_servers()
 	end
 end
 
+local function setup_signs()
+	vim.fn.sign_define("DiagnosticSignError", {
+		text = "", -- Error symbol
+		texthl = "DiagnosticSignError",
+		numhl = "DiagnosticSignError",
+	})
+	vim.fn.sign_define("DiagnosticSignWarn", {
+		text = "", -- Warning symbol
+		texthl = "DiagnosticSignWarn",
+		numhl = "DiagnosticSignWarn",
+	})
+
+	vim.fn.sign_define("DiagnosticSignInfo", {
+		text = "", -- Info symbol
+		texthl = "DiagnosticSignInfo",
+		numhl = "DiagnosticSignInfo",
+	})
+
+	vim.fn.sign_define("DiagnosticSignHint", {
+		text = "󰌵", -- Hint symbol
+		texthl = "DiagnosticSignHint",
+		numhl = "DiagnosticSignHint",
+	})
+end
+
 M.Init = function()
 	setup_handlers()
+	setup_signs()
 	clear_lsp_log()
 	setup_language_servers()
 end
