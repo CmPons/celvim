@@ -1,5 +1,7 @@
 local M = {}
 M.log_lines = {}
+M.log_buf = nil
+M.log_win = nil
 M.pending_notifications = {}
 M.shown_notifications = {}
 M.notification_timer = nil
@@ -149,23 +151,29 @@ M.Init = function()
 			title = "Log",
 		}
 		local win = vim.api.nvim_open_win(buf, true, config)
+		M.log_buf = buf
+		M.log_win = win
 		vim.api.nvim_buf_set_lines(buf, 0, -1, false, M.log_lines)
 
+		vim.api.nvim_set_option_value("modifiable", false, { buf = buf })
+		vim.bo.filetype = "celvimlog"
 		if #M.log_lines ~= 0 then
 			vim.api.nvim_win_set_cursor(win, { #M.log_lines, 0 })
 		end
 
 		vim.keymap.set("n", "q", function()
-			if win ~= nil and vim.api.nvim_win_is_valid(win) then
+			if M.log_win ~= nil and vim.api.nvim_win_is_valid(M.log_win) then
 				vim.api.nvim_win_close(win, true)
-				win = nil
+				M.log_buf = nil
+				M.log_win = nil
 			end
 		end, { buffer = M.log_buf, nowait = true })
 
 		vim.keymap.set("n", "<esc>", function()
-			if win ~= nil and vim.api.nvim_win_is_valid(win) then
+			if M.log_win ~= nil and vim.api.nvim_win_is_valid(M.log_win) then
 				vim.api.nvim_win_close(win, true)
-				win = nil
+				M.log_buf = nil
+				M.log_win = nil
 			end
 		end, { buffer = M.log_buf, nowait = true })
 	end, {})
@@ -191,6 +199,16 @@ end
 
 M.push_log_msg = function(msg)
 	M.log_lines[#M.log_lines + 1] = msg
+
+	if M.log_buf and M.log_win then
+		vim.api.nvim_set_option_value("modifiable", true, { buf = M.log_buf })
+		vim.api.nvim_buf_set_lines(M.log_buf, 0, -1, false, M.log_lines)
+
+		if #M.log_lines ~= 0 then
+			vim.api.nvim_win_set_cursor(M.log_win, { #M.log_lines, 0 })
+		end
+		vim.api.nvim_set_option_value("modifiable", false, { buf = M.log_buf })
+	end
 end
 
 function LogMsg(msg, level, _)
