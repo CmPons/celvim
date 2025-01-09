@@ -132,6 +132,40 @@ M.update_notifications = function()
 	end
 end
 
+local function close_log_win()
+	if M.log_win ~= nil and vim.api.nvim_win_is_valid(M.log_win) then
+		vim.api.nvim_win_close(M.log_win, true)
+		M.log_buf = nil
+		M.log_win = nil
+	end
+end
+
+local function jump_to_next_error(cursor_pos)
+	local lines = vim.api.nvim_buf_get_lines(M.log_buf, 0, -1, false)
+	for index, line in ipairs(lines) do
+		local error_msg = line:match("- error -")
+		if error_msg and index > cursor_pos[1] then
+			vim.api.nvim_win_set_cursor(M.log_win, { index, 0 })
+			return
+		end
+	end
+
+	-- Wrap. We didn't find anything
+	jump_to_next_error({ 0, 0 })
+end
+
+local function jump_to_file()
+	local line = vim.api.nvim_get_current_line()
+	local filepath, line_num = line:match("(/[%w%p]+%.%w+):(%d+)")
+	if filepath then
+		vim.cmd("tabnew " .. filepath)
+		close_log_win()
+		if line_num then
+			vim.api.nvim_win_set_cursor(0, { tonumber(line_num), 0 })
+		end
+	end
+end
+
 M.Init = function()
 	vim.api.nvim_create_user_command("ClearLogs", function()
 		M.log_lines = {}
@@ -161,21 +195,22 @@ M.Init = function()
 			vim.api.nvim_win_set_cursor(win, { #M.log_lines, 0 })
 		end
 
-		vim.keymap.set("n", "q", function()
-			if M.log_win ~= nil and vim.api.nvim_win_is_valid(M.log_win) then
-				vim.api.nvim_win_close(win, true)
-				M.log_buf = nil
-				M.log_win = nil
-			end
-		end, { buffer = M.log_buf, nowait = true })
+		vim.keymap.set("n", "q", close_log_win, { buffer = M.log_buf, nowait = true })
 
-		vim.keymap.set("n", "<esc>", function()
-			if M.log_win ~= nil and vim.api.nvim_win_is_valid(M.log_win) then
-				vim.api.nvim_win_close(win, true)
-				M.log_buf = nil
-				M.log_win = nil
-			end
-		end, { buffer = M.log_buf, nowait = true })
+		vim.keymap.set("n", "<tab>", function()
+			local cursor_pos = vim.api.nvim_win_get_cursor(M.log_win)
+			jump_to_next_error(cursor_pos)
+		end, {
+			buffer = M.log_buf,
+			desc = "Jump to next error",
+		})
+
+		vim.keymap.set("n", "<CR>", jump_to_file, {
+			buffer = M.log_buf,
+			desc = "Jump to file location",
+		})
+
+		vim.keymap.set("n", "<esc>", close_log_win, { buffer = M.log_buf, nowait = true })
 	end, {})
 
 	vim.keymap.set("n", "<leader>l", ":Logs<enter>", { desc = "Open the logs window" })
@@ -198,13 +233,20 @@ M.format_log_msg = function(msg, level)
 end
 
 M.push_log_msg = function(msg)
+	local cursor_at_bottom = false
+	if M.log_win then
+		local cursor_pos = vim.api.nvim_win_get_cursor(M.log_win)
+		cursor_at_bottom = cursor_pos[1] == #M.log_lines
+	end
+
 	M.log_lines[#M.log_lines + 1] = msg
 
 	if M.log_buf and M.log_win then
 		vim.api.nvim_set_option_value("modifiable", true, { buf = M.log_buf })
 		vim.api.nvim_buf_set_lines(M.log_buf, 0, -1, false, M.log_lines)
 
-		if #M.log_lines ~= 0 then
+		-- Follow the new logs if we're at the bottom of the window
+		if #M.log_lines ~= 0 and cursor_at_bottom then
 			vim.api.nvim_win_set_cursor(M.log_win, { #M.log_lines, 0 })
 		end
 		vim.api.nvim_set_option_value("modifiable", false, { buf = M.log_buf })
