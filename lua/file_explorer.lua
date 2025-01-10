@@ -229,6 +229,10 @@ local function on_add_item(curr_node, new_item_name)
 	end
 
 	local path = parent.path .. new_item_name
+	if parent.path == tree_root_path then
+		path = parent.path .. "/" .. new_item_name
+	end
+
 	local type = "file"
 	if string.find(new_item_name, "/") then
 		type = "directory"
