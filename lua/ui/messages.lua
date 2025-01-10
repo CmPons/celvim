@@ -59,8 +59,8 @@ local function create_confirm_window(msg, title, win_type)
 		relative = "editor",
 		width = width,
 		height = #lines,
-		row = math.floor((vim.o.lines - #lines) / 2),
-		col = math.floor((vim.o.columns - width) / 2),
+		row = 13,
+		col = 50,
 		style = "minimal",
 		border = "rounded",
 		title = title,
@@ -97,7 +97,9 @@ local function callback(event, ...)
 		if critical_errors[kind] then
 			vim.notify(text, vim.log.levels.ERROR)
 		elseif kind == "list_cmd" then
-			confirm_buf, confirm_win = create_confirm_window(text, "")
+			vim.schedule(function()
+				confirm_buf, confirm_win = create_confirm_window(text, "")
+			end)
 		elseif kind == "return_prompt" then
 			vim.api.nvim_input("<cr>")
 			return true

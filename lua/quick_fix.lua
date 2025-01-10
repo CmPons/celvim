@@ -35,7 +35,6 @@ local function create_search_win()
 					vim.fn.setqflist(M.original_qf_items)
 				else
 					query = query:gsub("Filter:", "")
-					print("Query", query)
 					local filtered_items = {}
 					for _, item in ipairs(M.original_qf_items) do
 						if item.text:lower():find(query:lower()) then
@@ -143,6 +142,7 @@ function setup_preview_win()
 
 		local cursor = vim.split(line[2], " ")
 		local row, col = tonumber(cursor[1]), tonumber(cursor[3])
+
 		vim.api.nvim_win_set_cursor(M.preview_win, { row, col })
 		vim.api.nvim_buf_add_highlight(M.preview_buf, -1, "BufferVisible", row - 1, 0, -1)
 

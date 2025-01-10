@@ -17,6 +17,11 @@ vim.keymap.set("n", "q:", ":", { nowait = true })
 local function on_show_cmdline(contents, firstc, prompt, indent, config)
 	if cmdline_win == nil then
 		cmdline_buf = vim.api.nvim_create_buf(false, true)
+		local width = 50
+		if #prompt > width then
+			width = #prompt
+		end
+
 		cmdline_win = vim.api.nvim_open_win(cmdline_buf, true, {
 			relative = "editor",
 			row = 10,
