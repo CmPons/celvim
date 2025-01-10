@@ -1,10 +1,10 @@
 local modules = {
+	"keymaps",
 	"logs",
 	"ui",
 	"ui.popup",
 	"ui.cmdwin",
 	"ui.messages",
-	"keymaps",
 	"file_explorer",
 	"file_finder",
 	"lsp",

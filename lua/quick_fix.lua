@@ -83,6 +83,10 @@ local close_qf = function()
 		vim.api.nvim_win_close(M.preview_win, false)
 	end
 
+	if M.search_buf and vim.api.nvim_buf_is_valid(M.search_buf) then
+		vim.api.nvim_buf_delete(M.search_buf, { force = true })
+	end
+
 	if M.search_win and vim.api.nvim_win_is_valid(M.search_win) then
 		vim.api.nvim_win_close(M.search_win, false)
 	end
