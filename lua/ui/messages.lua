@@ -18,6 +18,11 @@ local critical_errors = {
 local confirm_win = nil
 local confirm_buf = nil
 
+local confirm_win_type = {
+	YES_NO = 1,
+	CODE_ACTION = 2,
+}
+
 local function confirm_win_valid()
 	return confirm_win ~= nil and confirm_buf ~= nil
 end
@@ -35,8 +40,13 @@ local function clear_confirm_win()
 	confirm_buf = nil
 end
 
-local function create_confirm_window(msg)
+local function create_confirm_window(msg, title, win_type)
 	local lines = vim.split(msg, "\n", { plain = true, trimempty = true })
+
+	if win_type == confirm_win_type.CODE_ACTION then
+		table.remove(lines, 1)
+		table.remove(lines, #lines)
+	end
 
 	local width = 0
 	for _, line in ipairs(lines) do
@@ -53,7 +63,7 @@ local function create_confirm_window(msg)
 		col = math.floor((vim.o.columns - width) / 2),
 		style = "minimal",
 		border = "rounded",
-		title = " Confirm ",
+		title = title,
 	}
 
 	local win = vim.api.nvim_open_win(buf, true, win_config)
@@ -63,13 +73,21 @@ local function create_confirm_window(msg)
 	vim.api.nvim_win_set_option(win, "winhighlight", "Normal:Normal,FloatBorder:FloatBorder")
 	vim.api.nvim_buf_set_option(buf, "modifiable", false)
 
+	if win_type == confirm_win_type.CODE_ACTION then
+		vim.api.nvim_create_autocmd({ "BufLeave", "WinLeave" }, {
+			buffer = buf,
+			callback = clear_confirm_win,
+			once = true,
+		})
+	end
+
 	-- Force a redraw. This seems to need to be done if we're in command mode
 	vim.api.nvim__redraw({ cursor = true, win = win, flush = true })
 
 	return buf, win
 end
 
--- Note. Cannot use vim.schedule here because then input won't work
+-- Note! Cannot use vim.schedule here because then input won't work
 ---@type fun(event: string, ...): boolean
 local function callback(event, ...)
 	if event == "msg_show" then
@@ -78,14 +96,19 @@ local function callback(event, ...)
 
 		if critical_errors[kind] then
 			vim.notify(text, vim.log.levels.ERROR)
+		elseif kind == "list_cmd" then
+			confirm_buf, confirm_win = create_confirm_window(text, "")
 		elseif kind == "return_prompt" then
 			vim.api.nvim_input("<cr>")
-
 			return true
 		elseif kind == "confirm" then
-			confirm_buf, confirm_win = create_confirm_window(text)
+			confirm_buf, confirm_win = create_confirm_window(text, "Confirm", confirm_win_type.YES_NO)
 		else
-			print(text)
+			if text:find("Code actions:") then
+				confirm_buf, confirm_win = create_confirm_window(text, "Code Actions:", confirm_win_type.CODE_ACTION)
+			else
+				print(text)
+			end
 		end
 		return true
 	elseif event == "msg_clear" then
