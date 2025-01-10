@@ -257,7 +257,7 @@ function LogMsg(msg, level, _, silent)
 	silent = silent or false
 	local log_level = level or vim.log.levels.INFO
 
-	local msg_lines = vim.split(msg, "\n")
+	local msg_lines = vim.split(msg, "\n", { trimempty = true })
 	for _, line in ipairs(msg_lines) do
 		local log_msg = M.format_log_msg(line, log_level)
 		M.push_log_msg(log_msg)
@@ -283,6 +283,11 @@ end
 print = function(...)
 	local msg = string_from_variadic(...)
 	vim.notify(msg, vim.log.levels.DEBUG)
+end
+
+_G.info = function(...)
+	local msg = string_from_variadic(...)
+	LogMsg(msg, vim.log.levels.INFO, _, true)
 end
 
 _G.warn = function(...)

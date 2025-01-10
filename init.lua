@@ -20,6 +20,10 @@ local modules = {
 	"workspace_grep",
 }
 
+local ft_plugins = {
+	"rs",
+}
+
 function LoadModules()
 	for _, mod_name in ipairs(modules) do
 		local mod = require(mod_name)
@@ -36,6 +40,10 @@ function CleanupModules()
 			mod.Cleanup()
 		end
 		package.loaded[mod_name] = nil
+	end
+
+	for _, plugin in ipairs(ft_plugins) do
+		package.loaded[plugin] = nil
 	end
 end
 

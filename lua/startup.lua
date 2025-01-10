@@ -42,7 +42,7 @@ function M.InsertToBuf(margin, text, buf, start_line)
 end
 
 function M.Init()
-	vim.cmd("colorscheme nord")
+	vim.cmd.colorscheme("nord")
 	vim.o.ruler = false
 
 	-- If we are reloading the config, don't overwrite
