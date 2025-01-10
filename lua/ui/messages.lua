@@ -107,7 +107,8 @@ local function callback(event, ...)
 			confirm_buf, confirm_win = create_confirm_window(text, "Confirm", confirm_win_type.YES_NO)
 		else
 			if text:find("Code actions:") then
-				confirm_buf, confirm_win = create_confirm_window(text, "Code Actions:", confirm_win_type.CODE_ACTION)
+				return false
+			-- confirm_buf, confirm_win = create_confirm_window(text, "Code Actions:", confirm_win_type.CODE_ACTION)
 			else
 				print(text)
 			end
