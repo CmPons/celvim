@@ -7,7 +7,7 @@ local curr_tree = nil
 local tree_root_path = ""
 local dir_ns = vim.api.nvim_create_namespace("#fe_dir")
 local fe_autocmds = vim.api.nvim_create_augroup("fe_au_cmds", {})
-local adding_item = nil
+local prompt_open = nil
 
 local function find_last_dir_idx(contents)
 	local last_idx = nil
@@ -222,7 +222,53 @@ local function find_selected_node(row)
 	return selected_node
 end
 
-local function on_add_item(curr_node, new_item_name)
+local function on_delete_item(input)
+	prompt_open = false
+	if not input or input:lower() ~= "y" then
+		return
+	end
+
+	local pos = vim.api.nvim_win_get_cursor(0)
+	local curr_node = find_selected_node(pos[1])
+	if curr_node == nil then
+		return
+	end
+
+	local home = os.getenv("HOME")
+	if home == nil then
+		return
+	end
+	local absolute_path = string.gsub(curr_node.path, "~", home)
+
+	local res = vim.system({ "rm", "-rf", absolute_path }):wait()
+	print(res.stdout)
+	if res.code ~= 0 then
+		vim.notify("Failed to delete " .. curr_node.path, vim.log.levels.ERROR)
+		return
+	end
+
+	for i, node in ipairs(curr_node.parent.contents) do
+		if node.name == curr_node.name and node.path == curr_node.path then
+			table.remove(curr_node.parent.contents, i)
+		end
+	end
+
+	render_file_tree(curr_tree, tree_root_path)
+end
+
+local function on_add_item(new_item_name)
+	prompt_open = false
+	if not new_item_name then
+		return
+	end
+
+	local pos = vim.api.nvim_win_get_cursor(0)
+	local curr_node = find_selected_node(pos[1])
+
+	if not curr_node then
+		return
+	end
+
 	local parent = curr_node
 	if curr_node.type ~= "directory" then
 		parent = curr_node.parent
@@ -273,117 +319,6 @@ local function on_add_item(curr_node, new_item_name)
 	}
 
 	render_file_tree(curr_tree, tree_root_path)
-end
-
-local function on_delete_item(curr_node)
-	local home = os.getenv("HOME")
-	if home == nil then
-		return
-	end
-	local absolute_path = string.gsub(curr_node.path, "~", home)
-
-	local res = vim.system({ "rm", "-rf", absolute_path }):wait()
-	print(res.stdout)
-	if res.code ~= 0 then
-		vim.notify("Failed to delete " .. curr_node.path, vim.log.levels.ERROR)
-		return
-	end
-
-	for i, node in ipairs(curr_node.parent.contents) do
-		if node.name == curr_node.name and node.path == curr_node.path then
-			table.remove(curr_node.parent.contents, i)
-		end
-	end
-
-	render_file_tree(curr_tree, tree_root_path)
-end
-
-local function on_open_delete_item_win()
-	local file_explorer = vim.api.nvim_get_current_win()
-	local pos = vim.api.nvim_win_get_cursor(0)
-	local curr_node = find_selected_node(pos[1])
-	if curr_node == nil then
-		return
-	end
-
-	local buf = vim.api.nvim_create_buf(false, true)
-	vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "y/n: " })
-
-	local config = {
-		relative = "editor",
-		row = pos[1],
-		col = pos[2],
-		width = 40,
-		height = 1,
-		border = "single",
-		style = "minimal",
-		title = "Delete " .. curr_node.name .. " ?",
-	}
-
-	adding_item = true
-	local win = vim.api.nvim_open_win(buf, true, config)
-	vim.api.nvim_win_set_cursor(win, { 1, 5 })
-
-	vim.keymap.set("n", "y", function()
-		vim.api.nvim_win_close(win, false)
-		vim.api.nvim_set_current_win(file_explorer)
-		on_delete_item(curr_node)
-		adding_item = false
-	end, { buffer = buf })
-
-	local abort_delete = function()
-		vim.api.nvim_win_close(win, false)
-		vim.api.nvim_set_current_win(file_explorer)
-		adding_item = false
-	end
-
-	vim.keymap.set("n", "<esc>", function()
-		abort_delete()
-	end, { buffer = buf })
-
-	vim.keymap.set("n", "n", function()
-		abort_delete()
-	end, { buffer = buf })
-end
-
-local function on_open_add_item_win()
-	local file_explorer = vim.api.nvim_get_current_win()
-	local pos = vim.api.nvim_win_get_cursor(0)
-	local curr_node = find_selected_node(pos[1])
-
-	local buf = vim.api.nvim_create_buf(false, true)
-
-	local config = {
-		relative = "editor",
-		row = pos[1],
-		col = pos[2],
-		width = 40,
-		height = 1,
-		border = "single",
-		style = "minimal",
-		title = "Add Item",
-	}
-
-	adding_item = true
-	local win = vim.api.nvim_open_win(buf, true, config)
-
-	vim.keymap.set("i", "<enter>", function()
-		local line = vim.api.nvim_get_current_line()
-		vim.api.nvim_win_close(win, false)
-		vim.api.nvim_set_current_win(file_explorer)
-		on_add_item(curr_node, line)
-		vim.cmd.stopinsert()
-		adding_item = false
-	end, { buffer = buf })
-
-	vim.keymap.set("i", "<esc>", function()
-		vim.api.nvim_win_close(win, false)
-		vim.api.nvim_set_current_win(file_explorer)
-		vim.cmd.stopinsert()
-		adding_item = false
-	end, { buffer = buf })
-
-	vim.cmd.startinsert()
 end
 
 local function open_file_explorer()
@@ -449,23 +384,23 @@ local function open_file_explorer()
 	end, { buffer = buf, nowait = true })
 
 	vim.keymap.set("n", "a", function()
-		on_open_add_item_win()
+		prompt_open = true
+		vim.ui.input({ prompt = "Add item" }, on_add_item)
 	end, { buffer = buf })
 
 	vim.keymap.set("n", "d", function()
-		on_open_delete_item_win()
+		prompt_open = true
+		vim.ui.input({ prompt = "Delete?" }, on_delete_item)
 	end, { buffer = buf })
 
 	-- To prevent creating another when it's already open
-	vim.keymap.set("n", "<leader>fe", function() end, {
-		buffer = buf,
-	})
+	vim.keymap.set("n", "<leader>fe", function() end, { buffer = buf })
 
 	vim.api.nvim_create_autocmd({ "WinLeave", "BufLeave" }, {
 		buffer = buf,
 		group = fe_autocmds,
 		callback = function(ev)
-			if not adding_item then
+			if not prompt_open then
 				pcall(vim.api.nvim_buf_delete, buf, {})
 			end
 		end,
