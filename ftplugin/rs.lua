@@ -1,3 +1,5 @@
+vim.lsp.inlay_hint.enable(true)
+
 local root_dir = vim.fs.dirname(vim.fs.find({ "Cargo.lock" }, { upward = true })[1]) or "."
 
 --- @type fun(out: vim.SystemCompleted)
