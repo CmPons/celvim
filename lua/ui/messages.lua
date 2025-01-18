@@ -91,7 +91,7 @@ end
 ---@type fun(event: string, ...): boolean
 local function callback(event, ...)
 	if event == "msg_show" then
-		local kind, content, replace_last, history = ...
+		local kind, content, _, _ = ...
 		local text = get_message_text(content)
 
 		if critical_errors[kind] then

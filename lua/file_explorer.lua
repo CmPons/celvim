@@ -399,7 +399,7 @@ local function open_file_explorer()
 	vim.api.nvim_create_autocmd({ "WinLeave", "BufLeave" }, {
 		buffer = buf,
 		group = fe_autocmds,
-		callback = function(ev)
+		callback = function()
 			if not prompt_open then
 				pcall(vim.api.nvim_buf_delete, buf, {})
 			end
