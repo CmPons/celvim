@@ -119,7 +119,7 @@ local function setup_language_servers()
 
 		vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
 			group = lsp_funcs,
-			pattern = { lsp.file_ext },
+			pattern = lsp.file_ext,
 			callback = function(ev)
 				local clients = vim.lsp.get_clients({ name = lsp.config.name })
 				if clients[1] ~= nil then
