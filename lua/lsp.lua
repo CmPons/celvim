@@ -162,6 +162,10 @@ M.Init = function()
 	setup_signs()
 	clear_lsp_log()
 	setup_language_servers()
+	vim.keymap.set("n", "<leader>cl", function()
+		local log_file = vim.lsp.log.get_filename()
+		vim.cmd.tabnew(log_file)
+	end)
 end
 
 M.Cleanup = function()
