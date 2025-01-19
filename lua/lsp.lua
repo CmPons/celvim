@@ -28,7 +28,6 @@ local function setup_auto_complete()
 
 			local char = vim.v.char
 			if char == "(" or char == "," or char == "<" then
-				local curr_buf = vim.api.nvim_get_current_win()
 				local pos = vim.api.nvim_win_get_cursor(0)
 				local row, col = pos[1], pos[2]
 
@@ -71,7 +70,26 @@ local function clear_lsp_log()
 	end
 end
 
-local function register_format_on_save(autocmd_group, bufnr)
+local function format_buf(formatter)
+	local bufnr = vim.api.nvim_get_current_buf()
+	local filepath = vim.api.nvim_buf_get_name(bufnr)
+
+	local result = vim.system({ formatter, filepath }):wait()
+	if result.code ~= 0 then
+		vim.notify("Failed to format: " .. result.stderr, vim.log.levels.ERROR)
+		return
+	end
+
+	local current_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+	local current = table.concat(current_lines, "\n")
+
+	if current ~= result.stdout then
+		local new_lines = vim.split(result.stdout, "\n", { trimempty = false })
+		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, new_lines)
+	end
+end
+
+local function register_format_on_save(autocmd_group)
 	-- Format on save
 	-- We MUST clear the autocmds before registering a new one! If not,
 	-- we will overwrite any previous buffers!
@@ -81,7 +99,12 @@ local function register_format_on_save(autocmd_group, bufnr)
 		callback = function()
 			-- Specify buffer explicitly instead of 0, to avoid an assert.
 			-- 0 works on previous version of neovim
-			vim.lsp.buf.format({ bufnr })
+			local clients = vim.lsp.get_clients({ bufnr = 0 })
+			if clients[1] ~= nil then
+				vim.lsp.buf.format({ 0 })
+			elseif vim.bo.formatprg ~= "" then
+				format_buf(vim.bo.formatprg)
+			end
 		end,
 	})
 end

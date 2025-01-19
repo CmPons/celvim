@@ -2,7 +2,7 @@
   "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz") { } }:
 let
 in pkgs.mkShell {
-  packages = with pkgs; [ neovim nixfmt stylua ];
+  packages = with pkgs; [ neovim nixfmt stylua shfmt ];
 
   shellHook = ''
     # Set NVIM_APPNAME to your development config

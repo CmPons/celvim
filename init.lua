@@ -8,6 +8,7 @@ local modules = {
 	"ui.popup",
 	"file_explorer",
 	"file_finder",
+	"format",
 	"lsp",
 	"lsp.snippets",
 	"quick_fix",
