@@ -13,6 +13,7 @@ local modules = {
 	"lsp.snippets",
 	"quick_fix",
 	"settings",
+	"sessions",
 	"startup",
 	"startup.art",
 	"statusline",

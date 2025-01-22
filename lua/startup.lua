@@ -67,6 +67,10 @@ function M.Init()
 
 		vim.api.nvim_set_option_value("modifiable", false, { buf = buf })
 		vim.api.nvim_set_current_buf(buf)
+
+		vim.keymap.set("n", "s", function()
+			vim.cmd.LoadSession()
+		end, { buffer = 0 })
 	end
 end
 
