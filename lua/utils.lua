@@ -1,5 +1,11 @@
 local M = {}
 
+M.pos_from_screen_percent = function(percent)
+	local screen_size = { height = vim.api.nvim_win_get_height(0), width = vim.api.nvim_win_get_width(0) }
+
+	return { row = math.floor(screen_size.height * percent.row), col = math.floor(screen_size.width * percent.col) }
+end
+
 M.get_syntax_from_filetype = function(filetype)
 	if filetype == "rs" then
 		return "rust"

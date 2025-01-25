@@ -6,8 +6,11 @@ M.pending_notifications = {}
 M.shown_notifications = {}
 M.notification_timer = nil
 
-local StartCol = 155
-local StartRow = 33
+local utils = require("utils")
+local StartPos = utils.pos_from_screen_percent({ row = 1, col = 1 })
+
+local StartCol = StartPos.col
+local StartRow = StartPos.row
 local Spacing = 3
 local Height = 1
 local MaxWidth = 50
@@ -69,9 +72,9 @@ M.create_notification_win = function(msg, row, level)
 		col = StartCol,
 		width = width,
 		height = Height,
-		anchor = "SE",
 		border = "rounded",
 		style = "minimal",
+		anchor = "se",
 		title = icon,
 	}
 
@@ -174,10 +177,13 @@ M.Init = function()
 	vim.api.nvim_create_user_command("Logs", function()
 		local buf = vim.api.nvim_create_buf(false, true)
 		pcall(vim.api.nvim_buf_set_name, buf, "Logs")
+		local utils = require("utils")
+		local pos = utils.pos_from_screen_percent({ row = 0.05, col = 0.05 })
+
 		local config = {
 			relative = "editor",
-			row = 2,
-			col = 2,
+			row = pos.row,
+			col = pos.col,
 			width = 140,
 			height = 40,
 			border = "single",
