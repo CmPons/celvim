@@ -12,13 +12,16 @@ local function on_select(items, opts, on_choice)
 	end
 	width = math.max(width, #opts.prompt)
 
+	local utils = require("utils")
+	local pos = utils.pos_from_screen_percent({ row = 0.4, col = 0.35 })
+
 	local buf = vim.api.nvim_create_buf(false, true)
 	local win_config = {
 		relative = "editor",
 		width = width,
 		height = #lines + 1,
-		row = 13,
-		col = 50,
+		row = pos.row,
+		col = pos.col,
 		style = "minimal",
 		border = "rounded",
 	}

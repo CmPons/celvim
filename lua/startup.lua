@@ -45,6 +45,8 @@ function M.Init()
 	vim.cmd.colorscheme("nord")
 	vim.o.ruler = false
 
+	require("utils").win_size = { row = vim.api.nvim_win_get_height(0), col = vim.api.nvim_win_get_width(0) }
+
 	-- If we are reloading the config, don't overwrite
 	-- whatever is currently open
 	if #vim.api.nvim_list_bufs() == 1 then

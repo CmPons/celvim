@@ -22,10 +22,13 @@ local function on_show_cmdline(contents, firstc, prompt, indent, config)
 			width = #prompt
 		end
 
+		local utils = require("utils")
+		local pos = utils.pos_from_screen_percent({ row = 0.4, col = 0.35 })
+
 		cmdline_win = vim.api.nvim_open_win(cmdline_buf, true, {
 			relative = "editor",
-			row = 10,
-			col = 50,
+			row = pos.row,
+			col = pos.col,
 			width = 50,
 			height = 1,
 			style = "minimal",

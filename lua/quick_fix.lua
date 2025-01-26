@@ -9,10 +9,14 @@ M.original_qf_items = nil
 local function create_search_win()
 	if M.search_buf == nil and M.search_win == nil then
 		M.search_buf = vim.api.nvim_create_buf(false, true)
+
+		local utils = require("utils")
+		local pos = utils.pos_from_screen_percent({ row = 0.94, col = 0.070 })
+
 		local search_config = {
 			relative = "editor",
-			row = 30,
-			col = 10,
+			row = pos.row,
+			col = pos.col,
 			width = 125,
 			height = 1,
 			border = "single",
@@ -101,10 +105,14 @@ end
 local function create_preview_win()
 	if M.preview_buf == nil and M.preview_win == nil then
 		M.preview_buf = vim.api.nvim_create_buf(false, true)
+
+		local utils = require("utils")
+		local pos = utils.pos_from_screen_percent({ row = 0.045, col = 0.070 })
+
 		local prev_config = {
 			relative = "editor",
-			row = 1,
-			col = 10,
+			row = pos.row,
+			col = pos.col,
 			width = 125,
 			height = 20,
 			border = "single",
