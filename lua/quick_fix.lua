@@ -170,7 +170,7 @@ function on_select_qf_line(line)
 	local row, col = tonumber(cursor[1]), tonumber(cursor[3])
 	local file = split_line[1]
 
-	vim.cmd.tabnew(file)
+	vim.cmd("tab drop " .. file)
 	vim.api.nvim_win_set_cursor(vim.api.nvim_get_current_win(), { row, col })
 	vim.cmd.stopinsert()
 end

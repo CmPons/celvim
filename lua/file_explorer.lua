@@ -193,7 +193,7 @@ local function on_select_line(dir_only, close_parent)
 
 			assert(vim.fn.findfile(node.path) ~= "", "Trying to open a file that doesn't exist? " .. node.path)
 
-			vim.cmd.tabnew(node.path)
+			vim.cmd("tab drop " .. node.path)
 
 			local filetype = utils.get_filetype(node.path)
 			if filetype ~= nil then

@@ -19,7 +19,8 @@ local function fuzzy_find()
 			if file ~= nil then
 				vim.api.nvim_clear_autocmds({ group = augrp })
 				vim.api.nvim_buf_delete(0, { force = true })
-				vim.cmd.tabnew(file)
+
+				vim.cmd("tab drop " .. file)
 
 				local utils = require("utils")
 
