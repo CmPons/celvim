@@ -126,7 +126,7 @@ local function setup_language_servers()
 		vim.api.nvim_create_autocmd({ "FileType" }, {
 			group = lsp_funcs,
 			pattern = filetype,
-			callback = function(ev)
+			callback = function()
 				vim.wo.relativenumber = true
 				vim.wo.number = true
 				vim.notify("Starting " .. lsp.config.name)
@@ -134,7 +134,7 @@ local function setup_language_servers()
 				vim.lsp.start(lsp.config)
 
 				setup_auto_complete()
-				register_format_on_save(formatting, ev.buf)
+				register_format_on_save(formatting)
 
 				vim.lsp.set_log_level("debug")
 			end,
@@ -143,12 +143,12 @@ local function setup_language_servers()
 		vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
 			group = lsp_funcs,
 			pattern = lsp.file_ext,
-			callback = function(ev)
+			callback = function()
 				local clients = vim.lsp.get_clients({ name = lsp.config.name })
 				if clients[1] ~= nil then
 					vim.lsp.buf_attach_client(0, clients[1].id)
 					setup_auto_complete()
-					register_format_on_save(formatting, ev.buf)
+					register_format_on_save(formatting)
 				end
 			end,
 		})

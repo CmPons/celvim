@@ -54,18 +54,20 @@ local function create_confirm_window(msg, title, win_type)
 	end
 	width = math.min(60, math.max(30, width))
 
+	local utils = require("utils")
+	local pos = utils.pos_from_screen_percent({ row = 0.4, col = 0.35 })
+
 	local buf = vim.api.nvim_create_buf(false, true)
 	local win_config = {
 		relative = "editor",
 		width = width,
 		height = #lines,
-		row = 13,
-		col = 50,
+		row = pos.row,
+		col = pos.col,
 		style = "minimal",
 		border = "rounded",
 		title = title,
 	}
-
 	local win = vim.api.nvim_open_win(buf, true, win_config)
 
 	vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)

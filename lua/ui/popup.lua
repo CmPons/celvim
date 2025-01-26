@@ -5,8 +5,8 @@ local popup = {
 	items = nil,
 	current_pos = { row = nil, col = nil },
 	config = {
-		default_row = 12,
-		default_col = 51,
+		default_row = 0.47,
+		default_col = 0.35,
 		default_width = 10,
 		max_height = 10,
 	},
@@ -20,7 +20,9 @@ local function get_window_position(row, col)
 	local m = vim.api.nvim_get_mode().mode
 	-- In command mode, use the default
 	if m == "c" or m == "cv" or m == "ce" then
-		return popup.config.default_row, popup.config.default_col
+		local utils = require("utils")
+		local pos = utils.pos_from_screen_percent({ row = popup.config.default_row, col = popup.config.default_col })
+		return pos.row, pos.col
 	end
 
 	-- Check if we should render the popup above
