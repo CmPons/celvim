@@ -11,13 +11,14 @@ local function create_search_win()
 		M.search_buf = vim.api.nvim_create_buf(false, true)
 
 		local utils = require("utils")
-		local pos = utils.pos_from_screen_percent({ row = 0.94, col = 0.070 })
+		local pos = utils.pos_from_screen_percent({ row = 0.88, col = 0.10 })
+		local size = utils.size_from_screen_percent({ row = 0.80, col = 0.80 })
 
 		local search_config = {
 			relative = "editor",
 			row = pos.row,
 			col = pos.col,
-			width = 125,
+			width = size.width,
 			height = 1,
 			border = "single",
 			style = "minimal",
@@ -107,14 +108,15 @@ local function create_preview_win()
 		M.preview_buf = vim.api.nvim_create_buf(false, true)
 
 		local utils = require("utils")
-		local pos = utils.pos_from_screen_percent({ row = 0.045, col = 0.070 })
+		local pos = utils.pos_from_screen_percent({ row = 0.06, col = 0.10 })
+		local size = utils.size_from_screen_percent({ row = 0.60, col = 0.80 })
 
 		local prev_config = {
 			relative = "editor",
 			row = pos.row,
 			col = pos.col,
-			width = 125,
-			height = 20,
+			width = size.width,
+			height = size.height,
 			border = "single",
 			style = "minimal",
 		}
@@ -189,12 +191,17 @@ end
 
 local function change_qf_to_float()
 	M.qf_win = vim.api.nvim_get_current_win()
+
+	local utils = require("utils")
+	local pos = utils.pos_from_screen_percent({ row = 0.70, col = 0.10 })
+	local size = utils.size_from_screen_percent({ row = 0.15, col = 0.80 })
+
 	local config = {
 		relative = "editor",
-		row = 23,
-		col = 10,
-		width = 125,
-		height = 5,
+		row = pos.row,
+		col = pos.col,
+		width = size.width,
+		height = size.height,
 		border = "single",
 		style = "minimal",
 	}
