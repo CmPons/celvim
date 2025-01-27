@@ -27,6 +27,7 @@ _G.win_size = { row = vim.api.nvim_win_get_height(0), col = vim.api.nvim_win_get
 
 local ft_plugins = {
 	"rs",
+	"nix",
 }
 
 function LoadModules()
