@@ -1,9 +1,9 @@
 local modules = {
 	"keymaps",
 	"settings",
+	"logs",
 	"startup",
 	"startup.art",
-	"logs",
 	"ui",
 	"ui.cmdwin",
 	"ui.messages",
@@ -21,6 +21,8 @@ local modules = {
 	"terminal",
 	"workspace_grep",
 }
+
+_G.win_size = { row = vim.api.nvim_win_get_height(0), col = vim.api.nvim_win_get_width(0) }
 
 local ft_plugins = {
 	"rs",

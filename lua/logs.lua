@@ -177,8 +177,9 @@ M.Init = function()
 	vim.api.nvim_create_user_command("Logs", function()
 		local buf = vim.api.nvim_create_buf(false, true)
 		pcall(vim.api.nvim_buf_set_name, buf, "Logs")
+
 		local utils = require("utils")
-		local pos = utils.pos_from_screen_percent({ row = 0.05, col = 0.05 })
+		local pos = utils.pos_from_screen_percent({ row = 0.05, col = 0.15 })
 
 		local config = {
 			relative = "editor",
