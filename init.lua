@@ -9,6 +9,7 @@ local modules = {
 	"ui.messages",
 	"ui.select",
 	"ui.popup",
+	"utils",
 	"file_explorer",
 	"file_finder",
 	"format",

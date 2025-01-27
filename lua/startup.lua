@@ -1,6 +1,8 @@
 local M = {}
 M.initialized = false
-M.title_margin = 50
+local res = require("utils").pos_from_screen_percent({ row = 0.0, col = 0.4 })
+
+M.title_margin = res.col
 M.title = [[
  ██████╗███████╗██╗         ██╗   ██╗██╗███╗   ███╗
 ██╔════╝██╔════╝██║         ██║   ██║██║████╗ ████║

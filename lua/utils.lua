@@ -1,8 +1,12 @@
 local M = {}
 
 M.pos_from_screen_percent = function(percent)
-	print("Win size", "row", win_size.row, "col", win_size.col)
 	return { row = math.floor(win_size.row * percent.row), col = math.floor(win_size.col * percent.col) }
+end
+
+M.size_from_screen_percent = function(percent)
+	local pos = M.pos_from_screen_percent(percent)
+	return { width = pos.col, height = pos.row }
 end
 
 M.get_syntax_from_filetype = function(filetype)

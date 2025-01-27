@@ -142,9 +142,17 @@ local some_other_girl =
 
 M = {}
 
+local utils = require("utils")
+
 function M:GetRandArt()
 	local art = { twob, laptop_girl, eyes_girl, k_on, some_other_girl }
-	local margin = { 43, 42, 44, 43, 51 }
+	local margin = {
+		utils.pos_from_screen_percent({ row = 0, col = 0.36 }).col,
+		utils.pos_from_screen_percent({ row = 0, col = 0.37 }).col,
+		utils.pos_from_screen_percent({ row = 0, col = 0.35 }).col,
+		utils.pos_from_screen_percent({ row = 0, col = 0.37 }).col,
+		utils.pos_from_screen_percent({ row = 0, col = 0.40 }).col,
+	}
 
 	math.randomseed(os.time())
 	local idx = math.random(1, #art)

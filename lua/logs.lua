@@ -178,15 +178,15 @@ M.Init = function()
 		local buf = vim.api.nvim_create_buf(false, true)
 		pcall(vim.api.nvim_buf_set_name, buf, "Logs")
 
-		local utils = require("utils")
-		local pos = utils.pos_from_screen_percent({ row = 0.05, col = 0.15 })
+		local pos = utils.pos_from_screen_percent({ row = 0.10, col = 0.10 })
+		local size = utils.size_from_screen_percent({ row = 0.8, col = 0.8 })
 
 		local config = {
 			relative = "editor",
 			row = pos.row,
 			col = pos.col,
-			width = 140,
-			height = 40,
+			width = size.width,
+			height = size.height,
 			border = "single",
 			style = "minimal",
 			title = "Log",
