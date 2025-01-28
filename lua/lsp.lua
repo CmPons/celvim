@@ -147,9 +147,12 @@ local function setup_language_servers()
 				local clients = vim.lsp.get_clients({ name = lsp.config.name })
 				if clients[1] ~= nil then
 					vim.lsp.buf_attach_client(0, clients[1].id)
-					setup_auto_complete()
-					register_format_on_save(formatting)
+				else
+					vim.lsp.start(lsp.config)
 				end
+
+				setup_auto_complete()
+				register_format_on_save(formatting)
 			end,
 		})
 	end

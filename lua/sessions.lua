@@ -29,6 +29,9 @@ M.Init = function()
 			return
 		end
 
+		-- Delete all buffers first
+		vim.cmd("%bd!")
+
 		local full_path = home_path .. "/" .. ".local/state/celvim/sessions/"
 		vim.cmd.source(full_path .. filename .. ".vim")
 	end, {})
