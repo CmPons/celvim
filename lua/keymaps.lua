@@ -15,6 +15,14 @@ vim.keymap.set("n", "<Leader>bo", function()
 	vim.cmd.tabonly()
 end, { desc = "Close Other Buffers" })
 
+vim.keymap.set("n", "<Leader>br", function()
+	vim.cmd("+1,$tabdo :q")
+end, {})
+
+vim.keymap.set("n", "<Leader>bl", function()
+	vim.cmd("0,-1tabdo :q")
+end, {})
+
 vim.keymap.set("n", "<s-H>", function()
 	vim.cmd("tabprev")
 end, { desc = "Reload" })
