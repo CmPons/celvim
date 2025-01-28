@@ -40,19 +40,23 @@ local function on_select(items, opts, on_choice)
 		if idx == nil then
 			on_choice(nil, nil)
 			vim.api.nvim_win_close(win, false)
+			vim.api.nvim_buf_delete(buf, { force = true })
 			return
 		end
 		on_choice(items[idx], idx)
 		vim.api.nvim_win_close(win, false)
+		vim.api.nvim_buf_delete(buf, { force = true })
 	end)
 
 	vim.keymap.set("n", "<esc>", function()
 		vim.api.nvim_win_close(0, false)
+		vim.api.nvim_buf_delete(buf, { force = true })
 		on_choice(nil, nil)
 	end, { buffer = buf })
 
 	vim.keymap.set("n", "q", function()
 		vim.api.nvim_win_close(0, false)
+		vim.api.nvim_buf_delete(buf, { force = true })
 		on_choice(nil, nil)
 	end, { buffer = buf })
 
