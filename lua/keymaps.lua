@@ -79,7 +79,7 @@ local function skip_pair(pair)
 			return "<Right>"
 		end
 
-		return pair .. pair .. "<left>"
+		return pair
 	end
 end
 

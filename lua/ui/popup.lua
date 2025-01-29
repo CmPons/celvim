@@ -12,6 +12,41 @@ local popup = {
 	},
 }
 
+local kind_icons = {
+	Function = "󰊕",
+	Method = "󰆧",
+	Constructor = "󰒓",
+	Field = "󰜢",
+	Variable = "󰀫",
+	Class = "󰠱",
+	Interface = "󰕘",
+	Module = "󰏗",
+	Property = "󰜢",
+	Unit = "󰑭",
+	Value = "󰎠",
+	Enum = "󰒻",
+	Keyword = "󰌋",
+	Snippet = "󰩫",
+	Color = "󰏘",
+	File = "󰈙",
+	Reference = "󰈇",
+	Folder = "󰉋",
+	EnumMember = "󰒻",
+	Constant = "󰏿",
+	Struct = "󰙅",
+	Event = "󰉒",
+	Operator = "󰆕",
+	TypeParameter = "󰊄",
+	Table = "󰓫",
+	Object = "󰅩",
+	Tag = "󰓹",
+	Array = "󰅪",
+	Boolean = "󰨙",
+	Number = "󰎠",
+	String = "󰀬",
+	Null = "󰟢",
+}
+
 local function convert_index(zero_based_index)
 	return zero_based_index + 1
 end
@@ -50,18 +85,66 @@ local function get_visible_items(items, selected, height)
 
 	local lines = {}
 	local width = popup.config.default_width
+
+	local longest_word = 0
+	local longest_kind = 0
+
 	for i = start_idx, end_idx do
 		local item = items[i]
 		if item ~= nil then
-			local word, kind, menu, info = item[1], item[2], item[3], item[4]
+			local word, kind = item[1], item[2]
 
-			local line = word .. " " .. kind
-			lines[#lines + 1] = line
-			width = math.max(width, vim.fn.strdisplaywidth(line))
+			if #word > longest_word then
+				longest_word = #word
+			end
+
+			if #kind > longest_kind then
+				longest_kind = #kind
+			end
 		end
 	end
 
-	return lines, width
+	local spans = {}
+	for i = start_idx, end_idx do
+		local item = items[i]
+		if item ~= nil then
+			local word, kind, menu = item[1], item[2], item[3]
+
+			local word_spaces = longest_word - #word
+
+			local line = word
+			line = line .. string.rep(" ", word_spaces) .. " "
+
+			local kind_start = vim.fn.strdisplaywidth(line)
+			local icon = kind_icons[kind] and kind_icons[kind] or ""
+			if kind_icons[kind] == nil then
+				warn("Missing icon for " .. kind)
+			end
+
+			line = line .. icon .. " " .. kind .. " "
+
+			local kind_spaces = longest_kind - #kind
+			line = line .. string.rep(" ", kind_spaces)
+
+			local menu_start = #line
+
+			if menu and menu ~= "" then
+				line = line .. menu .. " "
+			end
+
+			local span = {
+				word = { start = 0, len = #word },
+				kind = { start = kind_start, len = vim.fn.strdisplaywidth(kind) + 6 },
+				menu = { start = menu_start, len = menu and #menu or 0 },
+			}
+
+			lines[#lines + 1] = line
+			spans[#spans + 1] = span
+			width = math.max(width, #line)
+		end
+	end
+
+	return lines, width, spans
 end
 
 local function create_popup_window(row, col, width, height)
@@ -76,11 +159,36 @@ local function create_popup_window(row, col, width, height)
 		border = "single",
 	})
 
+	vim.api.nvim_win_set_option(win, "winhighlight", "FloatBorder:Identifier")
+
 	return buf, win
 end
 
-local function update_window_content(buf, win, lines, row, col, height, width)
+local function update_window_content(buf, win, lines, spans, row, col, height, width)
 	vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+
+	for i, span in ipairs(spans) do
+		vim.api.nvim_buf_add_highlight(
+			buf,
+			popup.ns,
+			"Identifier",
+			i - 1,
+			span.word.start,
+			span.word.start + span.word.len
+		)
+		vim.api.nvim_buf_add_highlight(buf, popup.ns, "Float", i - 1, span.kind.start, span.kind.start + span.kind.len)
+
+		if span.menu.len ~= 0 then
+			vim.api.nvim_buf_add_highlight(
+				buf,
+				popup.ns,
+				"Title",
+				i - 1,
+				span.menu.start,
+				span.menu.start + span.menu.len
+			)
+		end
+	end
 
 	local config = vim.api.nvim_win_get_config(win)
 	config.row = row
@@ -89,12 +197,11 @@ local function update_window_content(buf, win, lines, row, col, height, width)
 	config.width = width
 
 	vim.api.nvim_win_set_config(win, config)
-	vim.api.nvim_buf_add_highlight(buf, -1, "illuminatedWord", 0, 0, -1)
 end
 
 local function update_popup(items, selected, row, col)
 	local height = math.min(popup.config.max_height, #items)
-	local lines, width = get_visible_items(items, selected, height)
+	local lines, width, spans = get_visible_items(items, selected, height)
 	row, col = get_window_position(row, col)
 
 	if not popup.win then
@@ -102,7 +209,7 @@ local function update_popup(items, selected, row, col)
 	end
 
 	if popup.win and vim.api.nvim_win_is_valid(popup.win) then
-		update_window_content(popup.buf, popup.win, lines, row, col, height, width)
+		update_window_content(popup.buf, popup.win, lines, spans, row, col, height, width)
 	end
 end
 
