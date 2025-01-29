@@ -13,6 +13,8 @@ M.Init = function()
 				return
 			end
 
+			vim.opt.sessionoptions:append("localoptions")
+
 			local full_path = home_path .. "/" .. ".local/state/celvim/sessions/"
 			vim.system({ "mkdir", full_path }):wait()
 
