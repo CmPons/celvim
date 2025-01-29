@@ -68,3 +68,27 @@ vim.keymap.set("n", "<C-j>", "<C-w>j")
 vim.keymap.set("n", "<C-k>", "<C-w>k")
 vim.keymap.set("n", "<C-h>", "<C-w>h")
 vim.keymap.set("n", "<C-l>", "<C-w>l")
+
+-- Convenience for completing various common characters that come in pairs
+local function skip_pair(pair)
+	return function()
+		local line = vim.api.nvim_get_current_line()
+		local col = vim.api.nvim_win_get_cursor(0)[2]
+
+		if line:sub(col + 1, col + 1) == pair then
+			return "<Right>"
+		end
+
+		return pair .. pair .. "<left>"
+	end
+end
+
+vim.keymap.set("i", '"', skip_pair('"'), { expr = true })
+vim.keymap.set("i", "'", skip_pair("'"), { expr = true })
+vim.keymap.set("i", ")", skip_pair(")"), { expr = true })
+vim.keymap.set("i", "}", skip_pair("}"), { expr = true })
+vim.keymap.set("i", "]", skip_pair("]"), { expr = true })
+
+vim.keymap.set("i", "(", "()<left>", { nowait = true })
+vim.keymap.set("i", "[", "[]<left>", { nowait = true })
+vim.keymap.set("i", "{", "{}<left>", { nowait = true })
