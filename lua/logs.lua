@@ -76,6 +76,7 @@ M.create_notification_win = function(msg, row, level)
 		style = "minimal",
 		anchor = "se",
 		title = icon,
+		zindex = 300,
 	}
 
 	local win = vim.api.nvim_open_win(buf, false, config)

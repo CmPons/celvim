@@ -13,6 +13,7 @@ local popup = {
 }
 
 local kind_icons = {
+	Text = "󰀬",
 	Function = "󰊕",
 	Method = "󰆧",
 	Constructor = "󰒓",
