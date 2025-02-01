@@ -7,6 +7,79 @@ M.set_keymap = function(mode, lhs, rhs, opts)
 	vim.keymap.set(mode, lhs, rhs, opts)
 end
 
+local function handle_quotes(quote)
+	local col = vim.fn.col(".")
+	local line = vim.api.nvim_get_current_line()
+
+	local left = line:sub(col - 1, col - 1)
+	local right = line:sub(col, col)
+
+	if left == quote and right == quote then
+		return "<right>"
+	end
+
+	if left ~= quote and right == quote then
+		return "<right>"
+	end
+
+	if left == quote and right ~= quote then
+		return quote .. "<left>"
+	end
+
+	return quote
+end
+
+local function check_skip_char()
+	local chars = {
+		"}",
+		")",
+		"]",
+		'"',
+		"'",
+	}
+
+	local col = vim.fn.col(".")
+	local line = vim.api.nvim_get_current_line()
+	local right = line:sub(col, col)
+
+	local valid_char = false
+	for _, char in ipairs(chars) do
+		if char == right then
+			valid_char = true
+			break
+		end
+	end
+
+	if not valid_char then
+		return in_char
+	end
+
+	return "<right>"
+end
+
+local function check_delete_pair()
+	local pairs = {
+		["{"] = "}",
+		["("] = ")",
+		["["] = "]",
+		['"'] = '"',
+		["'"] = "'",
+	}
+
+	local col = vim.fn.col(".")
+	local line = vim.api.nvim_get_current_line()
+
+	local left = line:sub(col - 1, col - 1)
+	local right = line:sub(col, col)
+
+	print("check_delete_pair", tostring(left), tostring(right))
+	local pair = pairs[left]
+	if pair ~= nil and pair == right then
+		return "<right><bs><bs>"
+	end
+	return "<bs>"
+end
+
 M.Init = function()
 	vim.g.mapleader = " "
 
@@ -77,9 +150,24 @@ M.Init = function()
 	M.set_keymap("n", "<C-h>", "<C-w>h")
 	M.set_keymap("n", "<C-l>", "<C-w>l")
 
-	M.set_keymap("i", "(", "()<left>", { nowait = true })
-	M.set_keymap("i", "[", "[]<left>", { nowait = true })
-	M.set_keymap("i", "{", "{}<left>", { nowait = true })
+	-- Basic typing completion and assistance
+	M.set_keymap("i", "(", "()<left>", {})
+	M.set_keymap("i", "[", "[]<left>", {})
+	M.set_keymap("i", "{", "{}<left>", {})
+
+	M.set_keymap("i", ")", check_skip_char, { expr = true })
+	M.set_keymap("i", "]", check_skip_char, { expr = true })
+	M.set_keymap("i", "}", check_skip_char, { expr = true })
+
+	M.set_keymap("i", '"', function()
+		return handle_quotes('"')
+	end, { expr = true })
+
+	M.set_keymap("i", "'", function()
+		return handle_quotes("'")
+	end, { expr = true })
+
+	M.set_keymap("i", "<BS>", check_delete_pair, { expr = true })
 end
 
 M.Cleanup = function()
