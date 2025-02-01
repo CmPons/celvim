@@ -1,94 +1,91 @@
-vim.g.mapleader = " "
+local M = {}
 
-vim.keymap.set("n", "<Leader>c", "", { desc = "Config" })
-vim.keymap.set("n", "<Leader>rr", function()
-	vim.cmd.Reload()
-end, { desc = "Reload" })
+M.keymaps = {}
 
--- Buffers
-vim.keymap.set("n", "<Leader>b", "", { desc = "Buffer" })
-vim.keymap.set("n", "<Leader>bd", function()
-	vim.cmd.tabclose()
-end, { desc = "Close Buffer" })
+M.set_keymap = function(mode, lhs, rhs, opts)
+	M.keymaps[#M.keymaps + 1] = { mode = mode, lhs = lhs }
+	vim.keymap.set(mode, lhs, rhs, opts)
+end
 
-vim.keymap.set("n", "<Leader>bo", function()
-	vim.cmd.tabonly()
-end, { desc = "Close Other Buffers" })
+M.Init = function()
+	vim.g.mapleader = " "
 
-vim.keymap.set("n", "<Leader>br", function()
-	vim.cmd("+1,$tabdo :q")
-end, {})
+	M.set_keymap("n", "<Leader>rr", function()
+		vim.cmd.Reload()
+	end, { desc = "Reload" })
 
-vim.keymap.set("n", "<Leader>bl", function()
-	vim.cmd("0,-1tabdo :q")
-end, {})
+	-- Buffers
+	M.set_keymap("n", "<Leader>bd", function()
+		vim.cmd.tabclose()
+	end, { desc = "Close Buffer" })
 
-vim.keymap.set("n", "<s-H>", function()
-	vim.cmd("tabprev")
-end, { desc = "Reload" })
+	M.set_keymap("n", "<Leader>bo", function()
+		vim.cmd.tabonly()
+	end, { desc = "Close Other Buffers" })
 
-vim.keymap.set("n", "<s-L>", function()
-	vim.cmd("tabnext")
-end, { desc = "Reload" })
+	M.set_keymap("n", "<Leader>br", function()
+		vim.cmd("+1,$tabdo :q")
+	end, {})
 
--- LSP
-vim.keymap.set("n", "gr", vim.lsp.buf.references, { desc = "Find References" })
-vim.keymap.set("n", "gd", vim.lsp.buf.definition, { desc = "Find Definitions" })
-vim.keymap.set("n", "gi", vim.lsp.buf.implementation, { desc = "Find Implementations" })
+	M.set_keymap("n", "<Leader>bl", function()
+		vim.cmd("0,-1tabdo :q")
+	end, {})
 
-vim.keymap.set("n", "<leader>sS", function()
-	vim.lsp.buf.workspace_symbol()
-end, { desc = "List workspace symbols" })
+	M.set_keymap("n", "<s-H>", function()
+		vim.cmd("tabprev")
+	end, { desc = "Reload" })
 
-vim.keymap.set("n", "<leader>ss", function()
-	vim.lsp.buf.document_symbol()
-end, { desc = "List buffer symbols" })
+	M.set_keymap("n", "<s-L>", function()
+		vim.cmd("tabnext")
+	end, { desc = "Reload" })
 
-vim.keymap.set("n", "<leader>cr", vim.lsp.buf.rename, { desc = "Rename Symbol" })
-vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "Code Action" })
+	-- LSP
+	M.set_keymap("n", "gr", vim.lsp.buf.references, { desc = "Find References" })
+	M.set_keymap("n", "gd", vim.lsp.buf.definition, { desc = "Find Definitions" })
+	M.set_keymap("n", "gi", vim.lsp.buf.implementation, { desc = "Find Implementations" })
 
-vim.keymap.set("n", "[w", function()
-	vim.diagnostic.goto_prev({ severity = 2 })
-end, { desc = "Prev Error" })
+	M.set_keymap("n", "<leader>sS", function()
+		vim.lsp.buf.workspace_symbol()
+	end, { desc = "List workspace symbols" })
 
-vim.keymap.set("n", "]w", function()
-	vim.diagnostic.goto_next({ severity = 2 })
-end, { desc = "Next Error" })
+	M.set_keymap("n", "<leader>ss", function()
+		vim.lsp.buf.document_symbol()
+	end, { desc = "List buffer symbols" })
 
-vim.keymap.set("n", "[e", function()
-	vim.diagnostic.goto_prev({ severity = 1 })
-end, { desc = "Prev Error" })
+	M.set_keymap("n", "<leader>cr", vim.lsp.buf.rename, { desc = "Rename Symbol" })
+	M.set_keymap("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "Code Action" })
 
-vim.keymap.set("n", "]e", function()
-	vim.diagnostic.goto_next({ severity = 1 })
-end, { desc = "Next Error" })
+	M.set_keymap("n", "[w", function()
+		vim.diagnostic.goto_prev({ severity = 2 })
+	end, { desc = "Prev Error" })
 
--- Window switching
-vim.keymap.set("n", "<C-j>", "<C-w>j")
-vim.keymap.set("n", "<C-k>", "<C-w>k")
-vim.keymap.set("n", "<C-h>", "<C-w>h")
-vim.keymap.set("n", "<C-l>", "<C-w>l")
+	M.set_keymap("n", "]w", function()
+		vim.diagnostic.goto_next({ severity = 2 })
+	end, { desc = "Next Error" })
 
--- Convenience for completing various common characters that come in pairs
-local function skip_pair(pair)
-	return function()
-		local line = vim.api.nvim_get_current_line()
-		local col = vim.api.nvim_win_get_cursor(0)[2]
+	M.set_keymap("n", "[e", function()
+		vim.diagnostic.goto_prev({ severity = 1 })
+	end, { desc = "Prev Error" })
 
-		if line:sub(col + 1, col + 1) == pair then
-			return "<Right>"
-		end
+	M.set_keymap("n", "]e", function()
+		vim.diagnostic.goto_next({ severity = 1 })
+	end, { desc = "Next Error" })
 
-		return pair
+	-- Window switching
+	M.set_keymap("n", "<C-j>", "<C-w>j")
+	M.set_keymap("n", "<C-k>", "<C-w>k")
+	M.set_keymap("n", "<C-h>", "<C-w>h")
+	M.set_keymap("n", "<C-l>", "<C-w>l")
+
+	M.set_keymap("i", "(", "()<left>", { nowait = true })
+	M.set_keymap("i", "[", "[]<left>", { nowait = true })
+	M.set_keymap("i", "{", "{}<left>", { nowait = true })
+end
+
+M.Cleanup = function()
+	for _, keymap in ipairs(M.keymaps) do
+		vim.keymap.del(keymap.mode, keymap.lhs)
 	end
 end
 
-vim.keymap.set("i", '"', skip_pair('"'), { expr = true })
-vim.keymap.set("i", "'", skip_pair("'"), { expr = true })
-vim.keymap.set("i", ")", skip_pair(")"), { expr = true })
-vim.keymap.set("i", "}", skip_pair("}"), { expr = true })
-vim.keymap.set("i", "]", skip_pair("]"), { expr = true })
-
-vim.keymap.set("i", "(", "()<left>", { nowait = true })
-vim.keymap.set("i", "[", "[]<left>", { nowait = true })
-vim.keymap.set("i", "{", "{}<left>", { nowait = true })
+return M

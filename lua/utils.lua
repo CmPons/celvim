@@ -49,6 +49,22 @@ M.get_curr_date_time = function()
 	return os.date("%c")
 end
 
+M.table_to_str = function(table, in_str)
+	local str = in_str and in_str or " { "
+
+	for k, v in pairs(table) do
+		if type(v) == "table" then
+			local s = M.table_to_str(v)
+			str = str .. s .. ","
+		else
+			str = str .. tostring(k) .. " : " .. '"' .. tostring(v) .. '"' .. ", "
+		end
+	end
+	str = str .. " }"
+
+	return str
+end
+
 M.dump_table = function(tbl, indent)
 	indent = indent or 0
 	for k, v in pairs(tbl) do
