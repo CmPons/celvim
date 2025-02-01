@@ -107,6 +107,9 @@ local function create_preview_win()
 	if M.preview_buf == nil and M.preview_win == nil then
 		M.preview_buf = vim.api.nvim_create_buf(false, true)
 
+		-- Disable to prevent error spam from RustLsp
+		vim.lsp.inlay_hint.enable(false, { bufnr = M.preview_buf })
+
 		local utils = require("utils")
 		local pos = utils.pos_from_screen_percent({ row = 0.06, col = 0.10 })
 		local size = utils.size_from_screen_percent({ row = 0.60, col = 0.80 })
