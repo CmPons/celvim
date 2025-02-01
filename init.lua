@@ -60,11 +60,3 @@ vim.api.nvim_create_user_command("Reload", function()
 end, {})
 
 LoadModules()
-
-local modes = { "n", "v", "x", "s", "o", "i", "c" }
-for _, mode in ipairs(modes) do
-	local keymaps = vim.api.nvim_get_keymap(mode)
-	for _, keymap in ipairs(keymaps) do
-		print(require("utils").table_to_str(keymap))
-	end
-end

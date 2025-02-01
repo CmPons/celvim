@@ -72,7 +72,6 @@ local function check_delete_pair()
 	local left = line:sub(col - 1, col - 1)
 	local right = line:sub(col, col)
 
-	print("check_delete_pair", tostring(left), tostring(right))
 	local pair = pairs[left]
 	if pair ~= nil and pair == right then
 		return "<right><bs><bs>"

@@ -144,25 +144,83 @@ local function close_log_win()
 	end
 end
 
-local function jump_to_next_error(cursor_pos)
+local error_strs = {
+	"panicked at",
+	"- error -",
+}
+
+local function jump_to_prev_error(cursor_pos, can_wrap)
+	can_wrap = can_wrap or true
+
 	local lines = vim.api.nvim_buf_get_lines(M.log_buf, 0, -1, false)
-	for index, line in ipairs(lines) do
-		local error_msg = line:match("- error -")
-		if error_msg and index > cursor_pos[1] then
-			vim.api.nvim_win_set_cursor(M.log_win, { index, 0 })
+	for i = #lines, 1, -1 do
+		local line = lines[i]
+		local match = nil
+		for _, str in ipairs(error_strs) do
+			match = line:match(str)
+			if match then
+				break
+			end
+		end
+
+		if match and i < cursor_pos[1] then
+			vim.api.nvim_win_set_cursor(M.log_win, { i, 0 })
 			return
 		end
 	end
 
-	-- Wrap. We didn't find anything
-	jump_to_next_error({ 0, 0 })
+	if can_wrap then
+		jump_to_prev_error({ #lines, 0 }, false)
+	end
+end
+
+local function jump_to_next_error(cursor_pos, can_wrap)
+	can_wrap = can_wrap or true
+
+	local lines = vim.api.nvim_buf_get_lines(M.log_buf, 0, -1, false)
+	for i = 1, #lines do
+		local line = lines[i]
+		local match = nil
+		for _, str in ipairs(error_strs) do
+			match = line:match(str)
+			if match then
+				break
+			end
+		end
+
+		if match and i > cursor_pos[1] then
+			vim.api.nvim_win_set_cursor(M.log_win, { i, 0 })
+			return
+		end
+	end
+
+	if can_wrap then
+		-- Wrap. We didn't find anything
+		jump_to_next_error({ 0, 0 }, false)
+	end
 end
 
 local function jump_to_file()
+	local filepath_patterns = {
+		"panicked at (.*%.rs):",
+		": (.*%.lua):",
+	}
+	local line_num_pattern = ":(%d+):"
+
 	local line = vim.api.nvim_get_current_line()
-	local filepath, line_num = line:match("(/[%w%p]+%.%w+):(%d+)")
+	local filepath = nil
+	local line_num = nil
+
+	for _, pattern in ipairs(filepath_patterns) do
+		filepath = line:match(pattern)
+		if filepath then
+			line_num = line:match(line_num_pattern)
+			break
+		end
+	end
+
 	if filepath then
-		vim.cmd("tabnew " .. filepath)
+		vim.cmd("tab drop " .. filepath)
 		close_log_win()
 		if line_num then
 			vim.api.nvim_win_set_cursor(0, { tonumber(line_num), 0 })
@@ -204,6 +262,14 @@ M.Init = function()
 		end
 
 		vim.keymap.set("n", "q", close_log_win, { buffer = M.log_buf, nowait = true })
+
+		vim.keymap.set("n", "<leader><tab>", function()
+			local cursor_pos = vim.api.nvim_win_get_cursor(M.log_win)
+			jump_to_prev_error(cursor_pos)
+		end, {
+			buffer = M.log_buf,
+			desc = "Jump to previous error",
+		})
 
 		vim.keymap.set("n", "<tab>", function()
 			local cursor_pos = vim.api.nvim_win_get_cursor(M.log_win)
@@ -266,9 +332,12 @@ function LogMsg(msg, level, _, silent)
 	local log_level = level or vim.log.levels.INFO
 
 	local msg_lines = vim.split(msg, "\n", { trimempty = true })
-	for _, line in ipairs(msg_lines) do
-		local log_msg = M.format_log_msg(line, log_level)
-		M.push_log_msg(log_msg)
+	for i, line in ipairs(msg_lines) do
+		local log = line
+		if i == 1 then
+			log = M.format_log_msg(line, log_level)
+		end
+		M.push_log_msg(log)
 	end
 
 	if log_level ~= vim.log.levels.DEBUG and not silent then
