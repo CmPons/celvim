@@ -203,9 +203,9 @@ end
 local function jump_to_file()
 	local filepath_patterns = {
 		"panicked at (.*%.rs):",
-		": (.*%.lua):",
+		"(%/.*%.lua):",
 	}
-	local line_num_pattern = ":(%d+):"
+	local line_num_pattern = { ".lua:(%d+):", ":(%d+):%d+:" }
 
 	local line = vim.api.nvim_get_current_line()
 	local filepath = nil
@@ -214,7 +214,13 @@ local function jump_to_file()
 	for _, pattern in ipairs(filepath_patterns) do
 		filepath = line:match(pattern)
 		if filepath then
-			line_num = line:match(line_num_pattern)
+			break
+		end
+	end
+
+	for _, pattern in ipairs(line_num_pattern) do
+		line_num = line:match(pattern)
+		if line_num then
 			break
 		end
 	end
@@ -223,7 +229,7 @@ local function jump_to_file()
 		vim.cmd("tab drop " .. filepath)
 		close_log_win()
 		if line_num then
-			vim.api.nvim_win_set_cursor(0, { tonumber(line_num), 0 })
+			vim.api.nvim_win_set_cursor(0, { tonumber(line_num), 1 })
 		end
 	end
 end

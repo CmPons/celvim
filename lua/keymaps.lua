@@ -29,7 +29,7 @@ local function handle_quotes(quote)
 	return quote
 end
 
-local function check_skip_char()
+local function check_skip_char(in_char)
 	local chars = {
 		"}",
 		")",
@@ -154,9 +154,17 @@ M.Init = function()
 	M.set_keymap("i", "[", "[]<left>", {})
 	M.set_keymap("i", "{", "{}<left>", {})
 
-	M.set_keymap("i", ")", check_skip_char, { expr = true })
-	M.set_keymap("i", "]", check_skip_char, { expr = true })
-	M.set_keymap("i", "}", check_skip_char, { expr = true })
+	M.set_keymap("i", ")", function()
+		return check_skip_char(")")
+	end, { expr = true })
+
+	M.set_keymap("i", "]", function()
+		return check_skip_char("]")
+	end, { expr = true })
+
+	M.set_keymap("i", "}", function()
+		return check_skip_char("}")
+	end, { expr = true })
 
 	M.set_keymap("i", '"', function()
 		return handle_quotes('"')

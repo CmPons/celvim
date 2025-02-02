@@ -140,6 +140,42 @@ local function close_and_hide(root)
 	end)
 end
 
+local function open_tree_to_root(node)
+	if not node then
+		return
+	end
+
+	local parent = node.parent
+	while parent do
+		parent.is_open = true
+		if parent.contents ~= nil and #parent.contents > 0 then
+			for _, child in ipairs(parent.contents) do
+				child.is_visible = parent.is_open
+				child.line = -1
+			end
+		end
+		parent = parent.parent
+	end
+end
+
+local function find_node_by_path(path)
+	local curr_node = nil
+	traverse_file_tree(curr_tree, -1, "", false, function(node)
+		if curr_node then
+			return
+		end
+
+		print("Comparing to", node.path)
+
+		if node.path == path then
+			curr_node = node
+			return
+		end
+	end)
+
+	return curr_node
+end
+
 local function on_select_line(dir_only, close_parent)
 	dir_only = dir_only or false
 	close_parent = close_parent or false
@@ -348,6 +384,12 @@ local function open_file_explorer()
 		curr_tree = tree_root
 	end
 
+	local curr_buff_path = vim.api.nvim_buf_get_name(0)
+	local home = os.getenv("HOME")
+	if home then
+		curr_buff_path = string.gsub(curr_buff_path, home, "~")
+	end
+
 	local buf = vim.api.nvim_create_buf(false, true)
 	local config = {
 		relative = "editor",
@@ -361,7 +403,16 @@ local function open_file_explorer()
 	}
 	vim.api.nvim_open_win(buf, true, config)
 
+	local selected_node = find_node_by_path(curr_buff_path)
+	open_tree_to_root(selected_node)
+
 	render_file_tree(curr_tree, tree_root_path)
+
+	local selection_ns = vim.api.nvim_create_namespace("#fe_selection")
+	if selected_node then
+		vim.api.nvim_win_set_cursor(0, { selected_node.line, 1 })
+		vim.api.nvim_buf_add_highlight(0, selection_ns, "BufferVisible", selected_node.line - 1, 0, -1)
+	end
 
 	vim.keymap.set("n", "<enter>", function()
 		on_select_line()
@@ -406,7 +457,6 @@ local function open_file_explorer()
 		end,
 	})
 
-	local selection_ns = vim.api.nvim_create_namespace("#fe_selection")
 	vim.api.nvim_create_autocmd({ "CursorMoved" }, {
 		buffer = vim.api.nvim_get_current_buf(),
 		group = fe_autocmds,
