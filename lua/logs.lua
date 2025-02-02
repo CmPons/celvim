@@ -293,7 +293,7 @@ M.Init = function()
 		vim.keymap.set("n", "<esc>", close_log_win, { buffer = M.log_buf, nowait = true })
 	end, {})
 
-	vim.keymap.set("n", "<leader>l", vim.cmd.Logs, { desc = "Open the logs window" })
+	vim.keymap.set("n", "<leader>ll", vim.cmd.Logs, { desc = "Open the logs window" })
 
 	local timer = vim.loop.new_timer()
 	timer:start(
