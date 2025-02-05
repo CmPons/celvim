@@ -26,10 +26,13 @@ local function close_run_win()
 	RunData.buf = nil
 end
 
-local function cleanup_run_data()
+local function cleanup_run_data(keep_output)
+	keep_output = keep_output or false
 	close_run_win()
 	RunData.system_obj = nil
-	RunData.output = {}
+	if not keep_output then
+		RunData.output = {}
+	end
 	RunData.term_channel = nil
 end
 
@@ -82,8 +85,9 @@ local function on_run_done(system_obj)
 		vim.notify("Run failed!", vim.log.levels.ERROR)
 		error(system_obj.stderr)
 	end
+
 	vim.schedule(function()
-		cleanup_run_data()
+		cleanup_run_data(true)
 	end)
 end
 
