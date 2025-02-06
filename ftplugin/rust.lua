@@ -151,6 +151,6 @@ local function cargo_build()
 end
 
 vim.keymap.set("n", "<leader>cc", cargo_build, { buffer = 0 })
-vim.keymap.set("n", "<leader>cr", cargo_run, { buffer = 0 })
+vim.keymap.set("n", "<leader>cu", cargo_run, { buffer = 0 })
 vim.keymap.set("n", "<leader>lr", open_run_output, { buffer = 0 })
 vim.keymap.set("n", "<leader>ct", cargo_test, { buffer = 0 })
