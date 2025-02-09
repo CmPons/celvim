@@ -22,11 +22,7 @@ local function handle_quotes(quote)
 		return "<right>"
 	end
 
-	if left == quote and right ~= quote then
-		return quote .. "<left>"
-	end
-
-	return quote
+	return quote .. quote .. "<left>"
 end
 
 local function check_skip_char(in_char)
