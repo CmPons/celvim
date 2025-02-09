@@ -17,13 +17,29 @@ M.get_syntax_from_filetype = function(filetype)
 	return filetype
 end
 
+local json_types = { "anim", "renderdata", "template", "map", "uiview", "config" }
+local is_json_type = function(ext)
+	for _, type in ipairs(json_types) do
+		if type == ext then
+			return true
+		end
+	end
+
+	return false
+end
+
 M.get_filetype = function(file_name)
 	local ext = file_name:match("^.+(%..+)$")
 	if ext == nil then
 		return ""
 	end
 
-	return ext:sub(2, #ext)
+	local file_type = ext:sub(2, #ext)
+	if is_json_type(file_type) then
+		return "json"
+	end
+
+	return file_type
 end
 
 M.sanitize_terminal_name = function(buf_name)

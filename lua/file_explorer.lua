@@ -165,8 +165,6 @@ local function find_node_by_path(path)
 			return
 		end
 
-		print("Comparing to", node.path)
-
 		if node.path == path then
 			curr_node = node
 			return

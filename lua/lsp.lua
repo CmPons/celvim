@@ -72,9 +72,15 @@ end
 
 local function format_buf(formatter)
 	local bufnr = vim.api.nvim_get_current_buf()
-	local filepath = vim.api.nvim_buf_get_name(bufnr)
+	local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+	local content = table.concat(lines, "\n")
 
-	local result = vim.system({ formatter, filepath }):wait()
+	local tmp_input = vim.fn.tempname()
+	vim.fn.writefile(vim.split(content, "\n"), tmp_input)
+
+	local result = vim.system({ formatter, tmp_input }):wait()
+	vim.fn.delete(tmp_input)
+
 	if result.code ~= 0 then
 		vim.notify("Failed to format: " .. result.stderr, vim.log.levels.ERROR)
 		return
