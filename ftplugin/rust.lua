@@ -81,9 +81,17 @@ end
 
 --- @type fun(out: vim.SystemCompleted)
 local function on_run_done(system_obj)
+	local lines = vim.split(system_obj.stderr, "\n", { plain = true, trimempty = true })
+	for _, line in ipairs(lines) do
+		RunData.output[#RunData.output + 1] = line
+	end
+
 	if system_obj.code ~= 0 then
 		vim.notify("Run failed!", vim.log.levels.ERROR)
-		error(system_obj.stderr)
+	end
+
+	if system_obj.code == 0 then
+		vim.notify("Run finished!", vim.log.levels.WARN)
 	end
 
 	vim.schedule(function()
@@ -100,7 +108,11 @@ local function cargo_run()
 	end
 
 	vim.notify("Executing Cargo run")
-	RunData.system_obj = vim.system({ "cargo", "r" }, { cwd = root_dir, stdout = on_run_output }, on_run_done)
+	RunData.system_obj = vim.system(
+		{ "cargo", "r" },
+		{ cwd = root_dir, stdout = on_run_output, text = true },
+		on_run_done
+	)
 end
 
 --- @type fun(out: vim.SystemCompleted)
