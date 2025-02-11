@@ -134,7 +134,8 @@ function setup_preview_win()
 	local line = vim.split(vim.api.nvim_get_current_line(), "|", { trimempty = true })
 	local file = line[1]
 	if #line < 3 or vim.fn.isdirectory(file) == 1 then
-		warn("Failed to setup preview for file", file)
+		vim.api.nvim_buf_set_lines(M.preview_buf, 0, -1, false, {})
+		vim.api.nvim_set_current_win(M.search_win)
 		return
 	end
 
