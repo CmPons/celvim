@@ -93,19 +93,19 @@ M.Init = function()
 
 	M.set_keymap("n", "<Leader>br", function()
 		vim.cmd("+1,$tabdo :q")
-	end, {})
+	end, { desc = "Remove tabs to the right" })
 
 	M.set_keymap("n", "<Leader>bl", function()
 		vim.cmd("0,-1tabdo :q")
-	end, {})
+	end, { desc = "Remove tabs to the left" })
 
 	M.set_keymap("n", "<s-H>", function()
 		vim.cmd("tabprev")
-	end, { desc = "Reload" })
+	end, { desc = "Previous Tab" })
 
 	M.set_keymap("n", "<s-L>", function()
 		vim.cmd("tabnext")
-	end, { desc = "Reload" })
+	end, { desc = "Next Tab" })
 
 	-- LSP
 	M.set_keymap("n", "gr", vim.lsp.buf.references, { desc = "Find References" })
@@ -171,6 +171,15 @@ M.Init = function()
 	end, { expr = true })
 
 	M.set_keymap("i", "<BS>", check_delete_pair, { expr = true })
+
+	M.set_keymap("i", "<C-u>", function()
+		local output = vim.system({ "uuidgen" }):wait()
+		local uuid = vim.fn.trim(output.stdout)
+		local line = vim.api.nvim_get_current_line()
+		local col = vim.fn.col(".")
+		local new_line = line:sub(1, col) .. uuid .. line:sub(col + 1, -1)
+		vim.api.nvim_set_current_line(new_line)
+	end, { desc = "Insert a UUID at the cursor location" })
 end
 
 M.Cleanup = function()
