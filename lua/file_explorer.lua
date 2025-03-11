@@ -417,7 +417,7 @@ local function open_file_explorer()
 	end, { buffer = buf })
 
 	vim.keymap.set("n", "h", function()
-		on_select_line(true, true)
+		on_select_line(true)
 	end, { buffer = buf })
 
 	vim.keymap.set("n", "l", function()
