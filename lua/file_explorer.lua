@@ -186,7 +186,11 @@ local function on_select_line(dir_only, close_parent)
 			return
 		end
 
-		if close_parent and node.parent ~= nil then
+		-- If we should close the parent, do so if the current folder is closed, or it's a file
+		local only_close_parent = close_parent
+			and ((node.type == "directory" and not node.is_open) or node.type == "file")
+
+		if close_parent and node.parent ~= nil and only_close_parent then
 			if node.parent.contents ~= nil and #node.parent.contents > 0 then
 				close_and_hide(node.parent)
 				local row = node.parent.line - 1
@@ -417,7 +421,7 @@ local function open_file_explorer()
 	end, { buffer = buf })
 
 	vim.keymap.set("n", "h", function()
-		on_select_line(true)
+		on_select_line(true, true)
 	end, { buffer = buf })
 
 	vim.keymap.set("n", "l", function()
