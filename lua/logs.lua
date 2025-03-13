@@ -315,8 +315,10 @@ end
 M.push_log_msg = function(msg)
 	local cursor_at_bottom = false
 	if M.log_win then
-		local cursor_pos = vim.api.nvim_win_get_cursor(M.log_win)
-		cursor_at_bottom = cursor_pos[1] == #M.log_lines
+		local success, cursor_pos = pcall(vim.api.nvim_win_get_cursor, M.log_win)
+		if success then
+			cursor_at_bottom = cursor_pos[1] == #M.log_lines
+		end
 	end
 
 	M.log_lines[#M.log_lines + 1] = msg
