@@ -142,7 +142,7 @@ local function setup_language_servers()
 				setup_auto_complete()
 				register_format_on_save(formatting)
 
-				vim.lsp.set_log_level("debug")
+				vim.lsp.set_log_level("INFO")
 			end,
 		})
 
