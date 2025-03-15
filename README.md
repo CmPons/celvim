@@ -10,3 +10,5 @@ Why? Because I wanted to learn how to extend Neovim, and I was tired of my setup
 
 — Saint Celestine
 
+
+*Art by [Majestic Chicken](https://www.deviantart.com/majesticchicken/art/The-Saint-Approaches-165105980)*
