@@ -1,7 +1,7 @@
 {
   description = "A flake setting up CelVim";
   inputs = { flake-utils.url = "github:numtide/flake-utils"; };
-  outputs = { nixpkgs, flake-utils, ... }:
+  outputs = { self, nixpkgs, flake-utils, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let pkgs = nixpkgs.legacyPackages.${system};
       in {
@@ -24,7 +24,7 @@
             shfmt
           ];
           NVIM_APPNAME = "celvim";
-          XDG_CONFIG_HOME = ".";
+          XDG_CONFIG_HOME = self.outPath;
         };
       });
 }
