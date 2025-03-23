@@ -14,6 +14,14 @@ Celvim is a Neovim config written without any plugins, using the built in APIs.
 ## Why?
 This was mainly used as a way to learn how to extend Neovim and because I was tired of my setup breaking.
 
+## Try it out!
+
+```
+nix develop github:CmPons/celvim
+```
+
+This depends on having [Nix Flakes](https://zero-to-nix.com/concepts/flakes/) setup.
+
 ## Dependencies
 * [The Nord theme](https://github.com/shaunsingh/nord.nvim) 
 * [Rust syntax file](https://github.com/rust-lang/rust.vim/blob/master/syntax/rust.vim)
