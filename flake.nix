@@ -4,10 +4,15 @@
   outputs = { self, nixpkgs, flake-utils, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let pkgs = nixpkgs.legacyPackages.${system};
+      celvim = pkgs.writeShellScriptBin "cvim" ''nvim'';
       in {
+
         devShells.default = pkgs.mkShell {
+          NVIM_APPNAME = "celvim";
+
           packages = with pkgs; [
             neovim
+            celvim
 
             # Utils
             tree
@@ -23,8 +28,10 @@
             stylua
             shfmt
           ];
-          NVIM_APPNAME = "celvim";
-          XDG_CONFIG_HOME = self.outPath;
+
+          shellHook = ''
+            ln -sfn ${self.outPath} ~/.config/$NVIM_APPNAME
+          '';
         };
       });
 }
