@@ -162,7 +162,40 @@ local function cargo_build()
 	vim.system({ "cargo", "build" }, { cwd = root_dir }, on_build_done)
 end
 
+local function debug_test()
+	local augrp = vim.api.nvim_create_augroup("FzfAutocmds", { clear = true })
+	vim.api.nvim_create_autocmd("TermOpen", {
+		callback = function()
+			vim.cmd.startinsert()
+		end,
+		group = augrp,
+	})
+
+	local cur_line = vim.api.nvim_win_get_cursor(0)
+	local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+
+	local pattern = "^%s*fn%s+([%a_][%w_]*)%s*%(%s*%)%s*{"
+	local test_name = ""
+	for i = cur_line[1], 1, -1 do
+		local line = lines[i]
+		test_name = string.match(line, pattern)
+		if test_name ~= nil and test_name ~= "" then
+			break
+		end
+	end
+	local buf = vim.fn.expand("%:p:h")
+
+	vim.cmd.tabnew()
+	local home = os.getenv("HOME")
+	local app_name = os.getenv("NVIM_APPNAME") or "neovim"
+	local script_path = home .. "/.config/" .. app_name .. "/scripts/debug_unit_test.sh"
+
+	vim.cmd.term(script_path .. " " .. test_name .. " " .. buf)
+	vim.keymap.set("n", "<esc>", ":q<enter>", { buffer = vim.api.nvim_get_current_buf() })
+end
+
 vim.keymap.set("n", "<leader>cc", cargo_build, { buffer = 0 })
 vim.keymap.set("n", "<leader>cu", cargo_run, { buffer = 0 })
 vim.keymap.set("n", "<leader>lr", open_run_output, { buffer = 0 })
 vim.keymap.set("n", "<leader>ct", cargo_test, { buffer = 0 })
+vim.keymap.set("n", "<leader>dt", debug_test, { buffer = 0 })
