@@ -1,5 +1,5 @@
 M = {}
-M.filetype = "rust"
+M.filetype = "rs"
 M.snippets = {
 	{
 		kind = "Snippet",
@@ -9,7 +9,7 @@ M.snippets = {
 			nvim = {
 				lsp = {
 					completion_item = {
-						insertText = "fn $1($2) {\n\t$0\n}",
+						insertText = "fn $1($2) $3 {\n\t$0\n}",
 					},
 				},
 			},
