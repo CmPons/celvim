@@ -3,8 +3,9 @@
   inputs = { flake-utils.url = "github:numtide/flake-utils"; };
   outputs = { self, nixpkgs, flake-utils, ... }:
     flake-utils.lib.eachDefaultSystem (system:
-      let pkgs = nixpkgs.legacyPackages.${system};
-      celvim = pkgs.writeShellScriptBin "cvim" ''nvim'';
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+        celvim = pkgs.writeShellScriptBin "cvim" "nvim";
       in {
 
         devShells.default = pkgs.mkShell {

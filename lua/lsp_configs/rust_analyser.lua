@@ -2,7 +2,7 @@ M = {}
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities.textDocument.completion.completionItem.snippetSupport = true
 
-M.filetype = "rs"
+M.filetype = "rust"
 M.file_ext = "*.rs"
 M.config = {
 	name = "rust-lsp",
