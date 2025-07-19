@@ -71,17 +71,17 @@ local complete_done = nil
 local function on_complete_done()
 	local completed_item = vim.v.completed_item
 
-	local insertFormat = 0
-	if completed_item.user_data ~= nil then
-		insertFormat = completed_item.user_data.nvim.lsp.completion_item.insertTextFormat
+	local completion_item = vim.tbl_get(completed_item, "user_data", "nvim", "lsp", "completion_item")
+
+	if completion_item == nil then
+		return
 	end
 
-	-- 2 == Is a snippet from the LSP
-	if insertFormat == 2 then
-		local utils = require("utils")
-		print(utils.dump_table(completed_item))
+	local insertFormat = completion_item.insertTextFormat or 0
 
-		local additional_edits = completed_item.user_data.nvim.lsp.completion_item.additionalTextEdits
+	-- 2 == Is a snippet from the LSP
+	if insertFormat == 2 and (completion_item.textEdit ~= nil or completion_item.insertText ~= nil) then
+		local additional_edits = completion_item.additionalTextEdits
 		if additional_edits ~= nil then
 			for _, textEdit in ipairs(additional_edits) do
 				local startChar = textEdit.range.start.character
@@ -95,29 +95,27 @@ local function on_complete_done()
 			end
 		end
 
-		local textEdit = completed_item.user_data.nvim.lsp.completion_item.textEdit
+		local textEdit = completion_item.textEdit
 		local snippet_text = nil
+
 		if textEdit ~= nil then
 			local startChar = textEdit.range.start.character
 
 			local curr_line = vim.api.nvim_get_current_line()
 			local split_line = string.sub(curr_line, 1, startChar)
 			vim.api.nvim_set_current_line(split_line)
-			snippet_text = completed_item.user_data.nvim.lsp.completion_item.textEdit.newText
+			snippet_text = completion_item.textEdit.newText
 		else
 			local curr_line = vim.api.nvim_get_current_line()
 			local new_line = curr_line:sub(1, #curr_line - #completed_item.abbr)
 			vim.api.nvim_set_current_line(new_line)
-			snippet_text = completed_item.user_data.nvim.lsp.completion_item.insertText
+			snippet_text = completion_item.insertText
 		end
 
-		vim.snippet.expand(snippet_text)
-		vim.api.nvim_del_autocmd(complete_done)
-		complete_done = nil
-	elseif completed_item.kind == "Keyword" then
-		vim.api.nvim_set_current_line("")
-		local snippet_text = completed_item.user_data.nvim.lsp.completion_item.textEdit.newText
-		vim.snippet.expand(snippet_text)
+		if snippet_text ~= nil then
+			vim.snippet.expand(snippet_text)
+		end
+
 		vim.api.nvim_del_autocmd(complete_done)
 		complete_done = nil
 	end
