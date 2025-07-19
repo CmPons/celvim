@@ -77,6 +77,12 @@ local function on_complete_done()
 		vim.snippet.expand(snippet_text)
 		vim.api.nvim_del_autocmd(complete_done)
 		complete_done = nil
+	elseif completed_item.kind == "Keyword" then
+		vim.api.nvim_set_current_line("")
+		local snippet_text = completed_item.user_data.nvim.lsp.completion_item.textEdit.newText
+		vim.snippet.expand(snippet_text)
+		vim.api.nvim_del_autocmd(complete_done)
+		complete_done = nil
 	end
 end
 

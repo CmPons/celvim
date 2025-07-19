@@ -174,7 +174,7 @@ local function debug_test()
 	local cur_line = vim.api.nvim_win_get_cursor(0)
 	local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
 
-	local pattern = "^%s*fn%s+([%a_][%w_]*)%s*%(%s*%)%s*{"
+	local pattern = "^%s*fn%s+([%a_][%w_]*)%s*%f[%s(]"
 	local test_name = ""
 	for i = cur_line[1], 1, -1 do
 		local line = lines[i]
@@ -183,6 +183,12 @@ local function debug_test()
 			break
 		end
 	end
+
+	if test_name == nil then
+		vim.notify("Failed to find test name! Bailing!", vim.log.levels.ERROR)
+		return
+	end
+
 	local buf = vim.fn.expand("%:p:h")
 
 	vim.cmd.tabnew()

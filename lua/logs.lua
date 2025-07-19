@@ -336,6 +336,15 @@ M.push_log_msg = function(msg)
 end
 
 function LogMsg(msg, level, _, silent)
+	-- Workaround for Rust analyzer spam. This is a Neovim issue fixed in 10.3+
+	if string.find(msg, "-32603: Invalid offset LineCol") ~= nil then
+		return
+	end
+
+	if string.find(msg, "-32802: server cancelled the request") ~= nil then
+		return
+	end
+
 	silent = silent or false
 	local log_level = level or vim.log.levels.INFO
 
