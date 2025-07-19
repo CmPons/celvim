@@ -10,6 +10,7 @@ M.snippets = {
 				lsp = {
 					completion_item = {
 						insertText = "fn $1($2) $3 {\n\t$0\n}",
+						insertTextFormat = 2,
 					},
 				},
 			},
@@ -24,6 +25,7 @@ M.snippets = {
 				lsp = {
 					completion_item = {
 						insertText = "fn $1($2) -> Result<$3> {\n\t$0\n}",
+						insertTextFormat = 2,
 					},
 				},
 			},
@@ -38,6 +40,7 @@ M.snippets = {
 				lsp = {
 					completion_item = {
 						insertText = "#[test]\nfn $1($2) {\n\t$0\n}",
+						insertTextFormat = 2,
 					},
 				},
 			},
@@ -52,6 +55,7 @@ M.snippets = {
 				lsp = {
 					completion_item = {
 						insertText = "#[test]\nfn $1($2) -> Result<$3> {\n\t$0\n}",
+						insertTextFormat = 2,
 					},
 				},
 			},
@@ -66,6 +70,7 @@ M.snippets = {
 				lsp = {
 					completion_item = {
 						insertText = "#[cfg(test)]\nmod test {\n\t$0\n}",
+						insertTextFormat = 2,
 					},
 				},
 			},
