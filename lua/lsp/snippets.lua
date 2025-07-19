@@ -63,23 +63,54 @@ vim.fn.complete = function(findstart, items)
 	return orig_complete(findstart, items)
 end
 
+function replace_char(str, pos, r)
+	return str:sub(1, pos - 1) .. r .. str:sub(pos + 1)
+end
+
 local complete_done = nil
 local function on_complete_done()
 	local completed_item = vim.v.completed_item
 
-	if completed_item.kind == "Snippet" then
-		local curr_line = vim.api.nvim_get_current_line()
-		local new_line = curr_line:sub(1, #curr_line - #completed_item.abbr)
-		vim.api.nvim_set_current_line(new_line)
+	local insertFormat = 0
+	if completed_item.user_data ~= nil then
+		insertFormat = completed_item.user_data.nvim.lsp.completion_item.insertTextFormat
+	end
 
-		local snippet_text = completed_item.user_data.nvim.lsp.completion_item.insertText
+	-- 2 == Is a snippet from the LSP
+	if insertFormat == 2 then
+		local utils = require("utils")
+		print(utils.dump_table(completed_item))
 
-		vim.snippet.expand(snippet_text)
-		vim.api.nvim_del_autocmd(complete_done)
-		complete_done = nil
-	elseif completed_item.kind == "Keyword" then
-		vim.api.nvim_set_current_line("")
-		local snippet_text = completed_item.user_data.nvim.lsp.completion_item.textEdit.newText
+		local additional_edits = completed_item.user_data.nvim.lsp.completion_item.additionalTextEdits
+		if additional_edits ~= nil then
+			for _, textEdit in ipairs(additional_edits) do
+				local startChar = textEdit.range.start.character
+				local endChar = textEdit.range["end"].character
+				local curr_line = vim.api.nvim_get_current_line()
+
+				for i = startChar, endChar do
+					curr_line = replace_char(curr_line, i, " ")
+				end
+				vim.api.nvim_set_current_line(curr_line)
+			end
+		end
+
+		local textEdit = completed_item.user_data.nvim.lsp.completion_item.textEdit
+		local snippet_text = nil
+		if textEdit ~= nil then
+			local startChar = textEdit.range.start.character
+
+			local curr_line = vim.api.nvim_get_current_line()
+			local split_line = string.sub(curr_line, 1, startChar)
+			vim.api.nvim_set_current_line(split_line)
+			snippet_text = completed_item.user_data.nvim.lsp.completion_item.textEdit.newText
+		else
+			local curr_line = vim.api.nvim_get_current_line()
+			local new_line = curr_line:sub(1, #curr_line - #completed_item.abbr)
+			vim.api.nvim_set_current_line(new_line)
+			snippet_text = completed_item.user_data.nvim.lsp.completion_item.insertText
+		end
+
 		vim.snippet.expand(snippet_text)
 		vim.api.nvim_del_autocmd(complete_done)
 		complete_done = nil
