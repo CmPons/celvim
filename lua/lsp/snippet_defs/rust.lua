@@ -3,28 +3,15 @@ M.filetype = "rs"
 M.snippets = {
 	{
 		kind = "Snippet",
-		word = "fn",
-		abbr = "fn",
-		user_data = {
-			nvim = {
-				lsp = {
-					completion_item = {
-						insertText = "fn $1($2) $3 {\n\t$0\n}",
-						insertTextFormat = 2,
-					},
-				},
-			},
-		},
-	},
-	{
-		kind = "Snippet",
 		word = "fnr",
 		abbr = "fnr",
 		user_data = {
 			nvim = {
 				lsp = {
 					completion_item = {
-						insertText = "fn $1($2) -> Result<$3> {\n\t$0\n}",
+						textEdit = {
+							newText = "fn $1($2) -> Result<$3> {\n\t$0\n}",
+						},
 						insertTextFormat = 2,
 					},
 				},
@@ -39,7 +26,9 @@ M.snippets = {
 			nvim = {
 				lsp = {
 					completion_item = {
-						insertText = "#[test]\nfn $1($2) {\n\t$0\n}",
+						textEdit = {
+							newText = "#[test]\nfn $1($2) {\n\t$0\n}",
+						},
 						insertTextFormat = 2,
 					},
 				},
@@ -54,7 +43,9 @@ M.snippets = {
 			nvim = {
 				lsp = {
 					completion_item = {
-						insertText = "#[test]\nfn $1($2) -> Result<$3> {\n\t$0\n}",
+						textEdit = {
+							newText = "#[test]\nfn $1($2) -> Result<$3> {\n\t$0\n}",
+						},
 						insertTextFormat = 2,
 					},
 				},
@@ -69,7 +60,9 @@ M.snippets = {
 			nvim = {
 				lsp = {
 					completion_item = {
-						insertText = "#[cfg(test)]\nmod test {\n\t$0\n}",
+						textEdit = {
+							newText = "#[cfg(test)]\nmod test {\n\t$0\n}",
+						},
 						insertTextFormat = 2,
 					},
 				},
