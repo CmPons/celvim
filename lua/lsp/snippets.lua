@@ -63,6 +63,17 @@ vim.fn.complete = function(findstart, items)
 	return orig_complete(findstart, items)
 end
 
+local function cut_abbr_from_line(completed_item)
+	-- Best effort based upon the assumption the abbr is inserted
+	local curr_line = vim.api.nvim_get_current_line()
+	local cursor_pos = vim.api.nvim_win_get_cursor(0)
+	local line_cut_start = cursor_pos[2] - #completed_item.abbr
+	local new_line_start = curr_line:sub(1, line_cut_start)
+	local new_line_end = curr_line:sub(cursor_pos[2] + 1, #curr_line)
+	vim.api.nvim_set_current_line(new_line_start .. new_line_end)
+	vim.api.nvim_win_set_cursor(0, { cursor_pos[1], line_cut_start })
+end
+
 local complete_done = nil
 local function on_complete_done()
 	local completed_item = vim.v.completed_item
@@ -86,13 +97,13 @@ local function on_complete_done()
 				-- To prepare for the snippet, erase the placeholder completion item
 				local startChar = textEdit.range.start.character
 				local curr_line = vim.api.nvim_get_current_line()
-				local split_line = string.sub(curr_line, 1, startChar)
-				vim.api.nvim_set_current_line(split_line)
+				local line_start = curr_line:sub(1, startChar)
+				local line_end = curr_line:sub(startChar + #completed_item.word + 1, #curr_line)
+				vim.api.nvim_set_current_line(line_start .. line_end)
+				local cursor_pos = vim.api.nvim_win_get_cursor(0)
+				vim.api.nvim_win_set_cursor(0, { cursor_pos[1], #line_start })
 			else
-				-- Best effort based upon the assumption the abbr is inserted
-				local curr_line = vim.api.nvim_get_current_line()
-				local new_line = curr_line:sub(1, #curr_line - #completed_item.abbr)
-				vim.api.nvim_set_current_line(new_line)
+				cut_abbr_from_line(completed_item)
 			end
 
 			snippet_text = completion_item.textEdit.newText
@@ -107,10 +118,7 @@ local function on_complete_done()
 		end
 	-- This section mainly handles lua
 	elseif completed_item.kind == "Snippet" and insertFormat == 2 and completion_item.insertText ~= nil then
-		local curr_line = vim.api.nvim_get_current_line()
-		local new_line = curr_line:sub(1, #curr_line - #completed_item.abbr)
-		vim.api.nvim_set_current_line(new_line)
-		vim.snippet.expand(completion_item.insertText)
+		cut_abbr_from_line(completed_item)
 	end
 
 	vim.api.nvim_del_autocmd(complete_done)
