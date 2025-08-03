@@ -10,14 +10,10 @@ M.size_from_screen_percent = function(percent)
 end
 
 M.get_syntax_from_filetype = function(filetype)
-	if filetype == "rs" then
-		return "rust"
-	end
-
 	return filetype
 end
 
-local json_types = { "anim", "renderdata", "template", "map", "uiview", "config" }
+local json_types = { "anim", "renderdata", "template", "map", "uiview", "config", "ai_brain" }
 local is_json_type = function(ext)
 	for _, type in ipairs(json_types) do
 		if type == ext then
@@ -37,6 +33,10 @@ M.get_filetype = function(file_name)
 	local file_type = ext:sub(2, #ext)
 	if is_json_type(file_type) then
 		return "json"
+	end
+
+	if file_type == "rs" then
+		return "rust"
 	end
 
 	return file_type

@@ -85,6 +85,16 @@ local function on_complete_done()
 
 	local insertFormat = completion_item.insertTextFormat or 0
 
+	local utils = require("utils")
+	local imports = vim.tbl_get(completion_item, "data", "imports")
+	local ft = utils.get_filetype(vim.api.nvim_buf_get_name(0))
+	if ft == "rust" and imports ~= nil then
+		for _, import in ipairs(imports) do
+			local line = "use " .. import.full_import_path .. ";"
+			vim.api.nvim_buf_set_lines(0, 0, 0, false, { line })
+		end
+	end
+
 	-- 2 == Is a snippet from the LSP
 	-- This is for Rust mainly. A lot of the text edits that aren't labeled as snippets still are'
 	if insertFormat == 2 and completion_item.textEdit ~= nil then
@@ -119,6 +129,7 @@ local function on_complete_done()
 	-- This section mainly handles lua
 	elseif completed_item.kind == "Snippet" and insertFormat == 2 and completion_item.insertText ~= nil then
 		cut_abbr_from_line(completed_item)
+		vim.snippet.expand(completion_item.insertText)
 	end
 
 	vim.api.nvim_del_autocmd(complete_done)

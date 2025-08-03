@@ -1,5 +1,5 @@
 M = {}
-M.filetype = "rs"
+M.filetype = "rust"
 M.snippets = {
 	{
 		kind = "Snippet",
