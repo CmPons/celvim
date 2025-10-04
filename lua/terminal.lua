@@ -2,6 +2,11 @@ vim.keymap.set("n", "<C-/>", function()
 	vim.cmd.Terminal()
 end, {})
 
+vim.keymap.set("n", "<CS-/>", function()
+	local current_dir = vim.fn.getcwd()
+	vim.cmd.Terminal(current_dir .. "/engine")
+end, {})
+
 vim.keymap.set("n", "<CA-/>", function()
 	local current_dir = vim.fn.expand("%:p:h")
 	local results = vim.fs.find({ "Cargo.toml", ".git" }, { upward = true, path = current_dir })

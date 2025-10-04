@@ -200,8 +200,26 @@ local function debug_test()
 	vim.keymap.set("n", "<esc>", ":q<enter>", { buffer = vim.api.nvim_get_current_buf() })
 end
 
+local function insert_generic()
+	local line = vim.api.nvim_get_current_line()
+	local new_line = line:gsub("(.*)%(", "%1::<>(")
+	vim.api.nvim_set_current_line(new_line)
+	local pos = new_line:find("<")
+	local cursor_pos = vim.api.nvim_win_get_cursor(0)
+	vim.api.nvim_win_set_cursor(0, { cursor_pos[1], pos })
+end
+
+local function end_insert()
+	local line = vim.api.nvim_get_current_line()
+	local pos = line:match(".*()%)")
+	local cursor_pos = vim.api.nvim_win_get_cursor(0)
+	vim.api.nvim_win_set_cursor(0, { cursor_pos[1], pos })
+end
+
 vim.keymap.set("n", "<leader>cc", cargo_build, { buffer = 0 })
 vim.keymap.set("n", "<leader>cu", cargo_run, { buffer = 0 })
 vim.keymap.set("n", "<leader>lr", open_run_output, { buffer = 0 })
 vim.keymap.set("n", "<leader>ct", cargo_test, { buffer = 0 })
 vim.keymap.set("n", "<leader>dt", debug_test, { buffer = 0 })
+vim.keymap.set("i", "<C-i>", insert_generic, { buffer = 0 })
+vim.keymap.set("i", "<C-e>", end_insert, { buffer = 0 })
