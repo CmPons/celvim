@@ -17,7 +17,7 @@ local function setup_auto_complete()
 		buffer = vim.api.nvim_get_current_buf(),
 		nested = false,
 		callback = function()
-			if vim.fn.pumvisible() ~= 0 or vim.fn.state("m") == "m" or vim.fn.state("a") == "a" then
+			if vim.fn.state("m") == "m" or vim.fn.state("a") == "a" then
 				return
 			end
 

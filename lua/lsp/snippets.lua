@@ -83,28 +83,37 @@ local function on_complete_done()
 		return
 	end
 
-	local insertFormat = completion_item.insertTextFormat or 0
+	-- Certain LSPs require a call to completionItem/resolve to get ever
+	-- important part of the completion item like use statements
+	local buf_nr = vim.api.nvim_get_current_buf()
+	local clients = vim.lsp.get_clients({ bufnr = buf_nr })
 
-	local utils = require("utils")
-	local imports = vim.tbl_get(completion_item, "data", "imports")
-	local ft = utils.get_filetype(vim.api.nvim_buf_get_name(0))
-	if ft == "rust" and imports ~= nil then
-		for _, import in ipairs(imports) do
-			local line = "use " .. import.full_import_path .. ";"
-			vim.api.nvim_buf_set_lines(0, 0, 0, false, { line })
+	for _, client in ipairs(clients) do
+		if
+			client.server_capabilities.completionProvider
+			and client.server_capabilities.completionProvider.resolveProvider
+		then
+			-- Resolve the completion item to get additionalTextEdits
+			local resolved_item = client.request_sync("completionItem/resolve", completion_item, 1000, buf_nr)
+
+			if resolved_item and resolved_item.result then
+				completion_item = resolved_item.result
+			end
+			break
 		end
 	end
 
+	local insertFormat = completion_item.insertTextFormat or 0
+
+	local utils = require("utils")
+
 	-- 2 == Is a snippet from the LSP
-	-- This is for Rust mainly. A lot of the text edits that aren't labeled as snippets still are'
 	if insertFormat == 2 and completion_item.textEdit ~= nil then
 		local textEdit = completion_item.textEdit
 		local snippet_text = nil
 
-		-- We don't use apply_text_edits here since it doesn't handle snippets
 		if textEdit ~= nil then
 			if textEdit.range ~= nil then
-				-- To prepare for the snippet, erase the placeholder completion item
 				local startChar = textEdit.range.start.character
 				local curr_line = vim.api.nvim_get_current_line()
 				local line_start = curr_line:sub(1, startChar)
@@ -119,19 +128,18 @@ local function on_complete_done()
 			snippet_text = completion_item.textEdit.newText
 			vim.snippet.expand(snippet_text)
 		end
-
-		-- Apply these edits after in case they are deletions
-		local buf_nr = vim.api.nvim_get_current_buf()
-		local additional_edits = completion_item.additionalTextEdits
-		if additional_edits ~= nil then
-			vim.lsp.util.apply_text_edits(additional_edits, buf_nr, "utf-8")
-		end
-	-- This section mainly handles lua
 	elseif completed_item.kind == "Snippet" and insertFormat == 2 and completion_item.insertText ~= nil then
 		cut_abbr_from_line(completed_item)
 		vim.snippet.expand(completion_item.insertText)
 	end
 
+	-- IMPORTANT: Apply additionalTextEdits for ALL completions, not just snippets
+	-- This is what makes auto-imports work!
+	local buf_nr = vim.api.nvim_get_current_buf()
+	local additional_edits = completion_item.additionalTextEdits
+	if additional_edits ~= nil then
+		vim.lsp.util.apply_text_edits(additional_edits, buf_nr, "utf-8")
+	end
 	vim.api.nvim_del_autocmd(complete_done)
 	complete_done = nil
 end

@@ -28,6 +28,17 @@ M.config = {
 				command = "clippy",
 				extraArgs = "--workspace --tests",
 			},
+			completion = {
+				autoimport = {
+					enable = true,
+				},
+			},
+			imports = {
+				granularity = {
+					group = "module",
+				},
+				prefix = "self",
+			},
 		},
 	},
 	init_options = {
