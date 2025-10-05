@@ -17,10 +17,6 @@ local function setup_auto_complete()
 		buffer = vim.api.nvim_get_current_buf(),
 		nested = false,
 		callback = function()
-			if vim.fn.state("m") == "m" or vim.fn.state("a") == "a" then
-				return
-			end
-
 			local char = vim.v.char
 			if char == "(" or char == "," or char == "<" then
 				local pos = vim.api.nvim_win_get_cursor(0)
