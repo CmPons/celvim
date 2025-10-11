@@ -272,6 +272,11 @@ local function on_delete_item(input)
 		return
 	end
 
+	-- DON'T rm -rf the base folder!
+	if curr_node.path == nil or curr_node.path == "" then
+		return
+	end
+
 	local home = os.getenv("HOME")
 	if home == nil then
 		return
@@ -296,7 +301,7 @@ end
 
 local function on_add_item(new_item_name)
 	prompt_open = false
-	if not new_item_name then
+	if new_item_name == nil or new_item_name == "" then
 		return
 	end
 
