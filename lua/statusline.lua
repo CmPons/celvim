@@ -196,10 +196,10 @@ local function lsp_diagnostics()
 		return ""
 	end
 
-	local errors = #vim.diagnostic.get(0, { severity = vim.diagnostic.severity.ERROR })
-	local warnings = #vim.diagnostic.get(0, { severity = vim.diagnostic.severity.WARN })
-	local hints = #vim.diagnostic.get(0, { severity = vim.diagnostic.severity.HINT })
-	local info = #vim.diagnostic.get(0, { severity = vim.diagnostic.severity.INFO })
+	local errors = #vim.diagnostic.get(nil, { severity = vim.diagnostic.severity.ERROR })
+	local warnings = #vim.diagnostic.get(nil, { severity = vim.diagnostic.severity.WARN })
+	local hints = #vim.diagnostic.get(nil, { severity = vim.diagnostic.severity.HINT })
+	local info = #vim.diagnostic.get(nil, { severity = vim.diagnostic.severity.INFO })
 
 	local errors_str = (errors and errors > 0) and ("%#DiagnosticError#" .. "  " .. errors .. " ") or ""
 	local warnings_str = (warnings and warnings > 0) and ("%#DiagnosticWarn#" .. "  " .. warnings .. " ") or ""

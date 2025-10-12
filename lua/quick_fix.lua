@@ -155,7 +155,9 @@ function setup_preview_win()
 		end
 
 		local cursor = vim.split(line[2], " ")
-		local row, col = tonumber(cursor[1]), tonumber(cursor[3])
+		local row = tonumber(cursor[1])
+		local col_str = vim.split(cursor[3], "-")
+		local col = tonumber(col_str[1])
 
 		vim.api.nvim_win_set_cursor(M.preview_win, { row, col })
 		vim.api.nvim_buf_add_highlight(M.preview_buf, -1, "BufferVisible", row - 1, 0, -1)
@@ -173,7 +175,9 @@ function on_select_qf_line(line)
 
 	local split_line = vim.split(line, "|")
 	local cursor = vim.split(split_line[2], " ")
-	local row, col = tonumber(cursor[1]), tonumber(cursor[3])
+	local row = tonumber(cursor[1])
+	local col_str = vim.split(cursor[3], "-")
+	local col = tonumber(col_str[1])
 	local file = split_line[1]
 
 	vim.cmd("tab drop " .. file)

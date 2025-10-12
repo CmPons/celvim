@@ -139,6 +139,10 @@ M.Init = function()
 		vim.diagnostic.goto_next({ severity = 1 })
 	end, { desc = "Next Error" })
 
+	M.set_keymap("n", "<leader>da", function()
+		vim.diagnostic.setqflist({ open = true, severity = { min = vim.diagnostic.severity.WARN } })
+	end, { desc = "Show all diagnostics" })
+
 	-- Window switching
 	M.set_keymap("n", "<C-j>", "<C-w>j")
 	M.set_keymap("n", "<C-k>", "<C-w>k")
