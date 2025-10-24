@@ -14,7 +14,6 @@ vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
 local function setup_auto_complete()
 	vim.api.nvim_create_autocmd("InsertCharPre", {
 		group = lsp_funcs,
-		buffer = vim.api.nvim_get_current_buf(),
 		nested = false,
 		callback = function()
 			local char = vim.v.char
@@ -43,8 +42,9 @@ local function setup_auto_complete()
 					vim.api.nvim_win_set_cursor(0, orig_pos)
 				end)
 			elseif char ~= ")" and char ~= ">" then
-				local key = vim.keycode("<C-x><C-o>")
-				vim.api.nvim_feedkeys(key, "m", false)
+				vim.schedule(function()
+					vim.lsp.omnifunc(1, 0)
+				end)
 			end
 		end,
 	})
@@ -119,6 +119,8 @@ local function setup_handlers()
 end
 
 local function setup_language_servers()
+	setup_auto_complete()
+
 	for filetype, lsp in pairs(lsp_configs) do
 		vim.api.nvim_create_autocmd({ "FileType" }, {
 			group = lsp_funcs,
@@ -130,7 +132,6 @@ local function setup_language_servers()
 
 				vim.lsp.start(lsp.config)
 
-				setup_auto_complete()
 				register_format_on_save(formatting)
 
 				vim.lsp.set_log_level("INFO")
@@ -148,7 +149,6 @@ local function setup_language_servers()
 					vim.lsp.start(lsp.config)
 				end
 
-				setup_auto_complete()
 				register_format_on_save(formatting)
 			end,
 		})

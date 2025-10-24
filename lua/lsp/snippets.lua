@@ -52,6 +52,17 @@ end
 
 local orig_complete = vim.fn.complete
 vim.fn.complete = function(findstart, items)
+	-- Insert our custom snippets
+	local filetype_snippets = snippets[vim.bo.filetype]
+	local word = curr_word()
+	if filetype_snippets ~= nil and word ~= "" then
+		for _, snip in ipairs(filetype_snippets) do
+			if string.find(snip.word, word) ~= nil then
+				table.insert(items, snip)
+			end
+		end
+	end
+
 	if type(items) == "table" then
 		for _, item in ipairs(items) do
 			if item.kind == "Snippet" then
@@ -105,8 +116,6 @@ local function on_complete_done()
 
 	local insertFormat = completion_item.insertTextFormat or 0
 
-	local utils = require("utils")
-
 	-- 2 == Is a snippet from the LSP
 	if insertFormat == 2 and completion_item.textEdit ~= nil then
 		local textEdit = completion_item.textEdit
@@ -147,16 +156,6 @@ end
 vim.api.nvim_create_autocmd("CompleteChanged", {
 	group = snippet_funcs,
 	callback = function()
-		local filetype_snippets = snippets[vim.bo.filetype]
-		local word = curr_word()
-		if filetype_snippets ~= nil and word ~= "" then
-			for _, snip in ipairs(filetype_snippets) do
-				if string.find(snip.word, word) ~= nil then
-					vim.fn.complete_add(snip)
-				end
-			end
-		end
-
 		if complete_done == nil then
 			complete_done = vim.api.nvim_create_autocmd({ "CompleteDone" }, {
 				group = snippet_funcs,
