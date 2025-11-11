@@ -9,4 +9,4 @@ vim.opt.rtp:prepend(vim.fn.getcwd())
 -- the PlenaryBustedDirectory command is properly defined *before* the
 -- -c flag from your Makefile tries to run it.
 -- This is the Lua equivalent of 'runtime plugin/plenary.vim'
-vim.cmd('runtime plugin/plenary.vim')
+vim.cmd("runtime plugin/plenary.vim")
