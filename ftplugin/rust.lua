@@ -297,6 +297,31 @@ local function debug_test()
   vim.keymap.set("n", "<esc>", ":q<enter>", { buffer = vim.api.nvim_get_current_buf() })
 end
 
+local function debug_run()
+  if RunData.system_obj == nil then
+    cargo_run()
+  end
+
+  local augrp = vim.api.nvim_create_augroup("FzfAutocmds", { clear = true })
+  vim.api.nvim_create_autocmd("TermOpen", {
+    callback = function()
+      vim.cmd.startinsert()
+    end,
+    group = augrp,
+  })
+
+  local cur_line = vim.api.nvim_win_get_cursor(0)
+  local buf = vim.api.nvim_buf_get_name(0)
+
+  vim.cmd.tabnew()
+  local home = os.getenv("HOME")
+  local app_name = os.getenv("NVIM_APPNAME") or "neovim"
+  local script_path = home .. "/.config/" .. app_name .. "/scripts/debug_run.sh"
+
+  vim.cmd.term(script_path .. " " .. cur_line[1] .. " " .. buf)
+  vim.keymap.set("n", "<esc>", ":q<enter>", { buffer = vim.api.nvim_get_current_buf() })
+end
+
 local function insert_generic()
   if vim.fn.pumvisible() ~= 0 then
     local key = vim.api.nvim_replace_termcodes("<ESC>i", true, false, true)
@@ -322,9 +347,10 @@ local function end_insert()
 end
 
 vim.keymap.set("n", "<leader>cc", cargo_build, { buffer = 0 })
-vim.keymap.set("n", "<leader>cu", cargo_run, { buffer = 0 })
-vim.keymap.set("n", "<leader>lr", open_run_output, { buffer = 0 })
+vim.keymap.set("n", "<leader>cu", cargo_run)
+vim.keymap.set("n", "<leader>lr", open_run_output)
 vim.keymap.set("n", "<leader>ct", cargo_test, { buffer = 0 })
 vim.keymap.set("n", "<leader>dt", debug_test, { buffer = 0 })
+vim.keymap.set("n", "<leader>du", debug_run)
 vim.keymap.set("i", "<C-g>", insert_generic, { buffer = 0 })
 vim.keymap.set("i", "<C-e>", end_insert, { buffer = 0 })
