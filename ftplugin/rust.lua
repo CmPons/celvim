@@ -141,43 +141,45 @@ local function cargo_test()
 end
 
 -- Must be global so the cargo run process is not per buffer
-RunData = {
-	win = nil,
-	buf = nil,
-	system_obj = nil,
-	term_channel = nil,
-	output = {},
-}
+_G.RunData = _G.RunData
+	or {
+		win = nil,
+		buf = nil,
+		system_obj = nil,
+		term_channel = nil,
+		output = {},
+		gdb_process = nil,
+	}
 
 local function close_run_win()
-	if RunData.win ~= nil then
-		vim.api.nvim_win_close(RunData.win, false)
+	if _G.RunData.win ~= nil then
+		vim.api.nvim_win_close(_G.RunData.win, false)
 	end
 
-	if RunData.buf ~= nil then
-		vim.api.nvim_buf_delete(RunData.buf, { force = true })
+	if _G.RunData.buf ~= nil then
+		vim.api.nvim_buf_delete(_G.RunData.buf, { force = true })
 	end
 
-	RunData.win = nil
-	RunData.buf = nil
+	_G.RunData.win = nil
+	_G.RunData.buf = nil
 end
 
 local function cleanup_run_data(keep_output)
 	keep_output = keep_output or false
 	close_run_win()
-	RunData.system_obj = nil
+	_G.RunData.system_obj = nil
 	if not keep_output then
-		RunData.output = {}
+		_G.RunData.output = {}
 	end
-	RunData.term_channel = nil
+	_G.RunData.term_channel = nil
 end
 
 local function open_run_output()
-	RunData.buf = vim.api.nvim_create_buf(false, true)
-	pcall(vim.api.nvim_buf_set_name, RunData.buf, "Cargo Run Output")
+	_G.RunData.buf = vim.api.nvim_create_buf(false, true)
+	pcall(vim.api.nvim_buf_set_name, _G.RunData.buf, "Cargo Run Output")
 
-	vim.keymap.set("n", "q", close_run_win, { buffer = RunData.buf, nowait = true })
-	vim.keymap.set("n", "<esc>", close_run_win, { buffer = RunData.buf, nowait = true })
+	vim.keymap.set("n", "q", close_run_win, { buffer = _G.RunData.buf, nowait = true })
+	vim.keymap.set("n", "<esc>", close_run_win, { buffer = _G.RunData.buf, nowait = true })
 
 	local pos = utils.pos_from_screen_percent({ row = 0.10, col = 0.10 })
 	local size = utils.size_from_screen_percent({ row = 0.8, col = 0.8 })
@@ -192,26 +194,26 @@ local function open_run_output()
 		style = "minimal",
 		title = "Output",
 	}
-	RunData.win = vim.api.nvim_open_win(RunData.buf, true, config)
-	RunData.term_channel = vim.api.nvim_open_term(RunData.buf, {})
-	for _, line in ipairs(RunData.output) do
+	_G.RunData.win = vim.api.nvim_open_win(_G.RunData.buf, true, config)
+	_G.RunData.term_channel = vim.api.nvim_open_term(_G.RunData.buf, {})
+	for _, line in ipairs(_G.RunData.output) do
 		if line ~= "" then
-			vim.api.nvim_chan_send(RunData.term_channel, line .. "\n")
+			vim.api.nvim_chan_send(_G.RunData.term_channel, line .. "\n")
 		end
 	end
 
-	local line_count = vim.api.nvim_buf_line_count(RunData.buf)
-	vim.api.nvim_win_set_cursor(RunData.win, { line_count, 1 })
+	local line_count = vim.api.nvim_buf_line_count(_G.RunData.buf)
+	vim.api.nvim_win_set_cursor(_G.RunData.win, { line_count, 1 })
 end
 
 local function on_run_output(_, data)
-	if RunData.system_obj == nil or data == nil or data == "" then
+	if _G.RunData.system_obj == nil or data == nil or data == "" then
 		return
 	end
 
 	local lines = vim.split(data, "\n", { plain = true, trimempty = true })
 	for _, line in ipairs(lines) do
-		RunData.output[#RunData.output + 1] = line
+		_G.RunData.output[#_G.RunData.output + 1] = line
 	end
 end
 
@@ -219,7 +221,7 @@ end
 local function on_run_done(system_obj)
 	local lines = vim.split(system_obj.stderr, "\n", { plain = true, trimempty = true })
 	for _, line in ipairs(lines) do
-		RunData.output[#RunData.output + 1] = line
+		_G.RunData.output[#_G.RunData.output + 1] = line
 	end
 
 	if system_obj.code ~= 0 then
@@ -236,16 +238,16 @@ local function on_run_done(system_obj)
 end
 
 local function cargo_run()
-	if RunData.system_obj then
+	if _G.RunData.system_obj then
 		vim.notify("Stopping running process...")
-		RunData.system_obj:kill(15)
+		_G.RunData.system_obj:kill(15)
 		cleanup_run_data()
 		return
 	end
 
-	vim.notify("Executing Cargo run")
-	RunData.system_obj = vim.system(
-		{ "cargo", "r" },
+	vim.notify("Running frontend...")
+	_G.RunData.system_obj = vim.system(
+		{ "target/debug/frontend" },
 		{ cwd = root_dir, stdout = on_run_output, text = true },
 		on_run_done
 	)
@@ -262,9 +264,14 @@ local function on_build_done(system_obj)
 	end
 end
 
-local function cargo_build()
+local function cargo_build(cont_func)
 	vim.notify("Compiling...")
-	vim.system({ "cargo", "build" }, { cwd = root_dir }, on_build_done)
+	vim.system({ "cargo", "build" }, { cwd = root_dir }, function(out)
+		on_build_done(out)
+		if out.code == 0 and cont_func ~= nil then
+			cont_func()
+		end
+	end)
 end
 
 local function debug_test()
@@ -306,28 +313,50 @@ local function debug_test()
 end
 
 local function debug_run()
-	if RunData.system_obj == nil then
-		cargo_run()
+	if _G.RunData.system_obj == nil or _G.RunData.system_obj.pid == nil then
+		error("Failed to debug. Is the frontend running??")
+		return
 	end
 
-	local augrp = vim.api.nvim_create_augroup("FzfAutocmds", { clear = true })
-	vim.api.nvim_create_autocmd("TermOpen", {
-		callback = function()
-			vim.cmd.startinsert()
-		end,
-		group = augrp,
-	})
+	if _G.RunData.gdb_process ~= nil then
+		if _G.RunData.gdb_process.job_id then
+			pcall(vim.fn.jobstop, _G.RunData.gdb_process.job_id)
+		elseif _G.RunData.gdb_process.pid then
+			vim.system({ "kill", tostring(_G.RunData.gdb_process.pid) })
+		end
+		_G.RunData.gdb_process = nil
+	end
 
 	local cur_line = vim.api.nvim_win_get_cursor(0)
 	local buf = vim.api.nvim_buf_get_name(0)
 
 	vim.cmd.tabnew()
-	local home = os.getenv("HOME")
-	local app_name = os.getenv("NVIM_APPNAME") or "neovim"
-	local script_path = home .. "/.config/" .. app_name .. "/scripts/debug_run.sh"
 
-	vim.cmd.term(script_path .. " " .. cur_line[1] .. " " .. buf)
-	vim.keymap.set("n", "<esc>", ":q<enter>", { buffer = vim.api.nvim_get_current_buf() })
+	local run_gdb = string.format(
+		'rust-gdb -q target/debug/frontend -ex "set pagination off" -ex "set confirmation off" -ex "set breakpoint pending on" -ex "attach %i" -ex "b %s:%i" -ex "tui e", -ex "c"',
+		_G.RunData.system_obj.pid,
+		buf,
+		cur_line[1]
+	)
+
+	vim.cmd.term(run_gdb)
+
+	local job_id = vim.b.terminal_job_id
+	local pid = vim.fn.jobpid(job_id)
+
+	_G.RunData.gdb_process = {
+		pid = pid,
+		job_id = job_id,
+		kill = function()
+			vim.fn.jobstop(job_id)
+		end,
+	}
+	vim.cmd.startinsert()
+	vim.keymap.set("n", "<esc>", function()
+		_G.RunData.gdb_process:kill()
+		_G.RunData.gdb_process = nil
+		vim.cmd("q")
+	end, { buffer = 0 })
 end
 
 local function insert_generic()
@@ -355,10 +384,20 @@ local function end_insert()
 end
 
 vim.keymap.set("n", "<leader>cc", cargo_build, { buffer = 0 })
-vim.keymap.set("n", "<leader>cu", cargo_run)
+vim.keymap.set("n", "<leader>cu", function()
+	cargo_build(cargo_run)
+end)
 vim.keymap.set("n", "<leader>lr", open_run_output)
 vim.keymap.set("n", "<leader>ct", cargo_test, { buffer = 0 })
 vim.keymap.set("n", "<leader>dt", debug_test, { buffer = 0 })
-vim.keymap.set("n", "<leader>du", debug_run)
+vim.keymap.set("n", "<leader>du", function()
+	cargo_build(function()
+		if _G.RunData.system_obj == nil then
+			cargo_run()
+		end
+
+		vim.schedule(debug_run)
+	end)
+end)
 vim.keymap.set("i", "<C-g>", insert_generic, { buffer = 0 })
 vim.keymap.set("i", "<C-e>", end_insert, { buffer = 0 })

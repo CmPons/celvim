@@ -150,7 +150,9 @@ local error_strs = {
 }
 
 local function jump_to_prev_error(cursor_pos, can_wrap)
-	can_wrap = can_wrap or true
+	if can_wrap == nil then
+		can_wrap = true
+	end
 
 	local lines = vim.api.nvim_buf_get_lines(M.log_buf, 0, -1, false)
 	for i = #lines, 1, -1 do
