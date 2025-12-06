@@ -155,12 +155,32 @@ function setup_preview_win()
 		end
 
 		local cursor = vim.split(line[2], " ")
-		local row = tonumber(cursor[1])
+		local row_str = vim.split(cursor[1], "-")
+		local row = tonumber(row_str[1])
 		local col_str = vim.split(cursor[3], "-")
 		local col = tonumber(col_str[1])
 
-		vim.api.nvim_win_set_cursor(M.preview_win, { row, col })
-		vim.api.nvim_buf_add_highlight(M.preview_buf, -1, "BufferVisible", row - 1, 0, -1)
+		local success, res = pcall(vim.api.nvim_win_set_cursor, M.preview_win, { row, col })
+		if not success then
+			error(
+				"Failed to set cursor in preview win",
+				"Line:",
+				vim.inspect(line),
+				"Row:",
+				tostring(row),
+				"Col:",
+				tostring(col),
+				"Err:",
+				tostring(res)
+			)
+		end
+
+		if row ~= nil then
+			success, res = pcall(vim.api.nvim_buf_add_highlight, M.preview_buf, -1, "BufferVisible", row - 1, 0, -1)
+			if not success then
+				error("Failed to add buff highlight on preview buf", "Row:", tostring(row), "Err:", tostring(res))
+			end
+		end
 
 		local current = vim.fn.getqflist({ idx = 0 }).idx
 		local qf_buf = vim.api.nvim_win_get_buf(M.qf_win)
@@ -175,7 +195,8 @@ function on_select_qf_line(line)
 
 	local split_line = vim.split(line, "|")
 	local cursor = vim.split(split_line[2], " ")
-	local row = tonumber(cursor[1])
+	local row_str = vim.split(cursor[1], "-")
+	local row = tonumber(row_str[1])
 	local col_str = vim.split(cursor[3], "-")
 	local col = tonumber(col_str[1])
 	local file = split_line[1]
