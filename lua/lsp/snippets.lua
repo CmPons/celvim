@@ -57,7 +57,8 @@ vim.fn.complete = function(findstart, items)
 	local word = curr_word()
 	if filetype_snippets ~= nil and word ~= "" then
 		for _, snip in ipairs(filetype_snippets) do
-			if string.find(snip.word, word) ~= nil then
+			local success, found = pcall(string.find, snip.word, word)
+			if success and found ~= nil then
 				table.insert(items, snip)
 			end
 		end
