@@ -38,7 +38,8 @@ local function fuzzy_find()
 
 	vim.cmd.tabnew()
 
-	vim.cmd.term("fzf --preview 'bat --style=numbers --color=always --line-range :500 {}'")
+	-- Fix git ignored files from polluting search results. Pipe rg results INTO fzf
+	vim.cmd.term("rg --files --hidden | fzf --preview 'bat --style=numbers --color=always --line-range :500 {}'")
 	vim.keymap.set("n", "<esc>", ":q<enter>", { buffer = vim.api.nvim_get_current_buf() })
 end
 
