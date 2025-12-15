@@ -49,7 +49,8 @@ function M.Init()
 
 	-- If we are reloading the config, don't overwrite
 	-- whatever is currently open
-	if #vim.api.nvim_list_bufs() == 1 then
+	-- Also, don't show the startup if nvim is opening files
+	if #vim.api.nvim_list_bufs() == 1 and vim.fn.argc() == 0 then
 		local buf = vim.api.nvim_create_buf(false, true)
 		M.buf = buf
 		pcall(vim.api.nvim_buf_set_name, buf, "Startup")
