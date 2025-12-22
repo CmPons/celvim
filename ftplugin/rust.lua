@@ -99,7 +99,9 @@ local function on_test_done(system_obj)
 							diagnostics_by_file[bufnr] = {}
 						end
 						local output_lines = vim.split(output, "\n", { plain = true, trimempty = true })
-						local trimmed_message = table.concat(vim.list_slice(output_lines, 2), "\n")
+
+						-- Remove "Panicked at line" and NOTE backtrace line
+						local trimmed_message = table.concat(vim.list_slice(output_lines, 2, #output_lines - 1), "\n")
 
 						table.insert(diagnostics_by_file[bufnr], {
 							lnum = tonumber(lnum) - 1,
@@ -124,7 +126,14 @@ local function on_test_done(system_obj)
 		vim.diagnostic.set(test_namespace, bufnr, diagnostics)
 	end
 
-	vim.notify("Tests done: " .. "passed - " .. passed .. " failed - " .. failed, vim.log.levels.INFO)
+	local notify_level = vim.log.levels.INFO
+	if system_obj.code ~= 0 then
+		notify_level = vim.log.levels.ERROR
+		print(system_obj.stdout)
+		print(system_obj.stderr)
+	end
+
+	vim.notify("Tests done: " .. "passed - " .. passed .. " failed - " .. failed, notify_level)
 end
 
 local function cargo_test()
