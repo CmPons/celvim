@@ -126,7 +126,12 @@ M.update_notifications = function()
 	local now = os.time()
 	for i = #M.shown_notifications, 1, -1 do
 		local notif = M.shown_notifications[i]
-		if now - notif.start > 5 then
+		local lifetime = 5
+		if notif.level == vim.log.levels.ERROR then
+			lifetime = 8
+		end
+
+		if now - notif.start > lifetime then
 			table.remove(M.shown_notifications, i)
 			if vim.api.nvim_win_is_valid(notif.win) then
 				local buf = vim.api.nvim_win_get_buf(notif.win)

@@ -215,6 +215,10 @@ local function open_run_output()
 	vim.api.nvim_win_set_cursor(_G.RunData.win, { line_count, 1 })
 end
 
+local function strip_ansi(str)
+	return str:gsub("\27%[[%d;?]*[A-Za-z]", "")
+end
+
 local function on_run_output(_, data)
 	if _G.RunData.system_obj == nil or data == nil or data == "" then
 		return
@@ -222,6 +226,10 @@ local function on_run_output(_, data)
 
 	local lines = vim.split(data, "\n", { plain = true, trimempty = true })
 	for _, line in ipairs(lines) do
+		if line:find("Error") then
+			vim.notify(strip_ansi(line), vim.log.levels.ERROR)
+		end
+
 		_G.RunData.output[#_G.RunData.output + 1] = line
 	end
 end
