@@ -268,6 +268,9 @@ local function cargo_run()
 		{ cwd = root_dir, stdout = on_run_output, text = true },
 		on_run_done
 	)
+
+	-- Clean run output
+	_G.RunData.output = {}
 end
 
 --- @type fun(out: vim.SystemCompleted)
