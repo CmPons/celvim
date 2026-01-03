@@ -64,6 +64,14 @@ end
 local function file_info()
 	local filename = (vim.fn.expand("%") == "" and "Empty ") or vim.fn.expand("%:t")
 	local icon = ""
+	local crate =
+		vim.fs.dirname(vim.fs.find({ "Cargo.toml" }, { upward = true, path = vim.api.nvim_buf_get_name(0) })[1])
+	crate = vim.fs.basename(crate)
+	if crate ~= "." then
+		crate = crate .. " - "
+	else
+		crate = ""
+	end
 
 	local utils = require("utils")
 	if string.find(filename, ".") == nil or string.find(filename, ":") then
@@ -89,6 +97,7 @@ local function file_info()
 				" ",
 				icon,
 				" ",
+				crate,
 				filename,
 				" ",
 			})
