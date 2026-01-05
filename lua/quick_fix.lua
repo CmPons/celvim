@@ -202,7 +202,7 @@ function on_select_qf_line(line)
 	local file = split_line[1]
 
 	-- Set row and column this way so the jumplist is preserved!
-	vim.cmd("tab drop +" .. row .. " " .. file)
+	vim.cmd("edit +" .. row .. " " .. file)
 	vim.cmd("normal! " .. col .. "|")
 	vim.cmd.stopinsert()
 end
