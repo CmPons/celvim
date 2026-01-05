@@ -375,7 +375,7 @@ local function open_terminal()
 end
 
 local function update_file_tree()
-	local result = vim.system({ "tree", "--dirsfirst", "-J" }):wait()
+	local result = vim.system({ "tree", "--dirsfirst", "-J", "--gitignore" }):wait()
 	if result.code ~= 0 then
 		vim.notify("Failed to open file explorer", vim.log.levels.ERROR)
 		return
