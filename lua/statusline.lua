@@ -67,7 +67,7 @@ local function file_info()
 	local crate =
 		vim.fs.dirname(vim.fs.find({ "Cargo.toml" }, { upward = true, path = vim.api.nvim_buf_get_name(0) })[1])
 	crate = vim.fs.basename(crate)
-	if crate ~= "." then
+	if crate ~= "." and crate ~= nil then
 		crate = crate .. " - "
 	else
 		crate = ""
