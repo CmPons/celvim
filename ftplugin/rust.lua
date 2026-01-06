@@ -161,16 +161,18 @@ _G.RunData = _G.RunData
 	}
 
 local function close_run_win()
-	if _G.RunData.win ~= nil then
-		vim.api.nvim_win_close(_G.RunData.win, false)
-	end
+	vim.schedule(function()
+		if _G.RunData.win ~= nil then
+			vim.api.nvim_win_close(_G.RunData.win, false)
+		end
 
-	if _G.RunData.buf ~= nil then
-		vim.api.nvim_buf_delete(_G.RunData.buf, { force = true })
-	end
+		if _G.RunData.buf ~= nil then
+			vim.api.nvim_buf_delete(_G.RunData.buf, { force = true })
+		end
 
-	_G.RunData.win = nil
-	_G.RunData.buf = nil
+		_G.RunData.win = nil
+		_G.RunData.buf = nil
+	end)
 end
 
 local function cleanup_run_data(keep_output)
