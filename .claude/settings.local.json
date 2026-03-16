@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(which gcc:*)",
+      "Bash(echo:*)",
+      "Read(//c/ProgramData/chocolatey/bin/**)",
+      "Bash(cd:*)",
+      "Read(//c/usr/bin/**)",
+      "Read(//mingw64/**)",
+      "Bash(pacman --version)",
+      "Bash(which tree:*)",
+      "Bash(which jq:*)",
+      "Bash(chmod:*)",
+      "Bash(bash scripts/tree.sh 2>&1)",
+      "Bash(time bash:*)",
+      "Read(//c/Users/christopher.pons/**)",
+      "Bash(ls -d */)",
+      "Bash(which cargo:*)",
+      "Bash(cargo init:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(nvim:*)",
+      "Bash(rustup target:*)",
+      "Bash(wsl:*)"
+    ]
+  }
+}

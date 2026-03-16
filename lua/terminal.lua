@@ -37,3 +37,12 @@ vim.api.nvim_create_user_command("Terminal", function(opts)
 	vim.cmd("startinsert")
 	vim.keymap.set("n", "<esc>", ":q<enter>", { buffer = vim.api.nvim_get_current_buf() })
 end, { nargs = "?" })
+
+if vim.fn.has("win32") == 1 then
+	local bash_path = vim.fn.exepath("bash")
+	if bash_path ~= "" then
+		vim.o.shell = bash_path
+		vim.o.shellcmdflag = "-c"
+		vim.o.shellxquote = ""
+	end
+end
