@@ -46,9 +46,15 @@ local function workspace_search()
 
 	vim.cmd.tabnew()
 
-	local home = os.getenv("HOME")
-	local app_name = os.getenv("NVIM_APPNAME") or "neovim"
-	local script_path = home .. "/.config/" .. app_name .. "/scripts/search.sh"
+	local script_path = ""
+	if vim.fn.has("win32") == 1 then
+		local home = vim.fs.normalize(os.getenv("HOME"))
+		script_path = home .. "/AppData/Local/celvim/scripts/search.sh"
+	else
+		local home = os.getenv("HOME")
+		local app_name = os.getenv("NVIM_APPNAME") or "neovim"
+		script_path = home .. "/.config/" .. app_name .. "/scripts/search.sh"
+	end
 
 	vim.cmd.term(script_path)
 	vim.keymap.set("n", "<esc>", ":q<enter>", { buffer = vim.api.nvim_get_current_buf() })
