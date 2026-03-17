@@ -503,6 +503,10 @@ M.Init = function()
 	vim.keymap.set("n", "<leader>fe", function()
 		open_file_explorer()
 	end, { desc = "File Explorer" })
+
+	vim.keymap.set("n", "<leader>tr", function()
+		update_file_tree()
+	end, { desc = "File Explorer" })
 end
 
 M.Cleanup = function()
