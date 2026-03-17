@@ -42,7 +42,7 @@ M.Init = function()
 
       vim.fn.mkdir(session_folder, "p")
 
-      vim.cmd("mksession! " .. get_session_file_fullpath() .. ".vim")
+      vim.cmd("mksession! " .. get_session_file_fullpath())
     end,
   })
 
