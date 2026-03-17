@@ -415,11 +415,7 @@ local function open_file_explorer()
 		update_file_tree()
 	end
 
-	local curr_buff_path = vim.api.nvim_buf_get_name(0)
-	local home = os.getenv("HOME")
-	if home then
-		curr_buff_path = string.gsub(curr_buff_path, home, "~")
-	end
+	local curr_buff_path = vim.fs.normalize(vim.api.nvim_buf_get_name(0))
 
 	local buf = vim.api.nvim_create_buf(false, true)
 	local config = {
