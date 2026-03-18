@@ -17,7 +17,7 @@ function EditFile(file_to_edit)
       "Failed to open file " .. file_to_edit .. " for edit:\n" .. sys_completed.stdout .. "\n" .. sys_completed.stderr
     )
   else
-    vim.notify("Opened "..vim.fn.fnamemodify(curr_buff, ":t").." for edit in p4!")
+    vim.notify("Opened " .. vim.fn.fnamemodify(file_to_edit, ":t") .. " for edit in p4!")
   end
 end
 
@@ -40,23 +40,22 @@ local function AddFile(file_to_add)
       "Failed to add file " .. file_to_add .. " for edit:\n" .. sys_completed.stdout .. "\n" .. sys_completed.stderr
     )
   else
-    vim.notify("Added "..vim.fn.fnamemodify(curr_buff, ":t").." to p4!")
+    vim.notify("Added " .. vim.fn.fnamemodify(file_to_add, ":t") .. " to p4!")
   end
 end
 
 local M = {}
 
 M.Init = function()
+  vim.keymap.set("n", "<leader>pe", function()
+    local curr_buff = vim.api.nvim_buf_get_name(0)
+    EditFile(curr_buff)
+  end)
 
-	vim.keymap.set("n", "<leader>pe", function()
-        local curr_buff = vim.api.nvim_buf_get_name(0)
-        EditFile(curr_buff)
-	end)
-
-	vim.keymap.set("n", "<leader>pa", function()
-        local curr_buff = vim.api.nvim_buf_get_name(0)
-        AddFile(curr_buff)
-	end)
+  vim.keymap.set("n", "<leader>pa", function()
+    local curr_buff = vim.api.nvim_buf_get_name(0)
+    AddFile(curr_buff)
+  end)
 end
 
 M.Cleanup = function()
