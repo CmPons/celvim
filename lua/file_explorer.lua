@@ -375,29 +375,13 @@ local function open_terminal()
 end
 
 local function update_file_tree()
-	local result = nil
-	local file_tree = nil
-	if vim.fn.has("win32") == 1 then
-		local tree = require("celvim_tree")
-		result = tree.build()
-		file_tree = result
-	else
-		result = vim.system({ "tree", "--dirsfirst", "-J", "--gitignore" }):wait()
-
-		if result.code ~= 0 then
-			vim.notify("Failed to open file explorer", vim.log.levels.ERROR)
-			return
-		end
-
-		file_tree = vim.json.decode(result.stdout)
-	end
-
-	local tree_root = file_tree[1]
+	local tree = require("celvim_tree")
+	local tree_root = tree.build()[1]
 
 	local root_path = os.getenv("PWD")
 	local home = os.getenv("HOME")
 	if root_path == nil or home == nil then
-		vim.notify("Failed to open file explorer", vim.log.levels.ERROR)
+		vim.notify("Failed to open file explorer: " .. home .. " " .. root_path, vim.log.levels.error)
 		return
 	end
 	root_path = root_path:gsub(home, "~")
