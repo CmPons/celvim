@@ -58,9 +58,10 @@ M.format_buf = function(formatter)
 		vim.notify("Failed to format: " .. result.stderr, vim.log.levels.ERROR)
 		return
 	end
+	vim.cmd("edit!")
 end
 
-local function register_format_on_save(autocmd_group)
+local function register_format_on_save(autocmd_group, lsp_formatter)
 	-- Format on save
 	-- We MUST clear the autocmds before registering a new one! If not,
 	-- we will overwrite any previous buffers!
@@ -70,8 +71,11 @@ local function register_format_on_save(autocmd_group)
 		callback = function()
 			-- Specify buffer explicitly instead of 0, to avoid an assert.
 			-- 0 works on previous version of neovim
+
 			local clients = vim.lsp.get_clients({ bufnr = 0 })
-			if clients[1] ~= nil then
+			if lsp_formatter ~= nil then
+				M.format_buf(lsp_formatter)
+			elseif clients[1] ~= nil then
 				vim.lsp.buf.format({ 0 })
 			elseif vim.bo.formatprg ~= "" then
 				M.format_buf(vim.bo.formatprg)
@@ -105,8 +109,9 @@ local function setup_language_servers()
 				vim.notify("Starting " .. lsp.config.name)
 
 				vim.lsp.start(lsp.config)
+				vim.print("Setting up lsp: \n" .. vim.inspect(lsp))
 
-				register_format_on_save(M.formatting)
+				register_format_on_save(M.formatting, lsp.formatter)
 
 				vim.lsp.set_log_level("INFO")
 			end,
@@ -123,7 +128,7 @@ local function setup_language_servers()
 					vim.lsp.start(lsp.config)
 				end
 
-				register_format_on_save(M.formatting)
+				register_format_on_save(M.formatting, lsp.formatter)
 			end,
 		})
 	end
