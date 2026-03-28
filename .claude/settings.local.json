@@ -27,7 +27,8 @@
       "WebFetch(domain:hiphish.github.io)",
       "WebFetch(domain:zignar.net)",
       "WebFetch(domain:www.tset.de)",
-      "WebFetch(domain:www.dantleech.com)"
+      "WebFetch(domain:www.dantleech.com)",
+      "Skill(verify)"
     ]
   }
 }
