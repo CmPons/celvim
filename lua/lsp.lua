@@ -53,12 +53,19 @@ local function clear_lsp_log()
 end
 
 M.format_buf = function(formatter)
-	local result = vim.system({ formatter, vim.api.nvim_buf_get_name(0) }):wait()
+	local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+	local input = table.concat(lines, "\n") .. "\n"
+	local cmd = type(formatter) == "table" and formatter or { formatter }
+	local result = vim.system(cmd, { stdin = input }):wait()
 	if result.code ~= 0 then
 		vim.notify("Failed to format: " .. result.stderr, vim.log.levels.ERROR)
 		return
 	end
-	vim.cmd("edit!")
+	local formatted = vim.split(result.stdout, "\n")
+	if formatted[#formatted] == "" then
+		table.remove(formatted)
+	end
+	vim.api.nvim_buf_set_lines(0, 0, -1, false, formatted)
 end
 
 local function register_format_on_save(autocmd_group, lsp_formatter)
@@ -66,12 +73,13 @@ local function register_format_on_save(autocmd_group, lsp_formatter)
 	-- We MUST clear the autocmds before registering a new one! If not,
 	-- we will overwrite any previous buffers!
 	vim.api.nvim_clear_autocmds({ group = autocmd_group })
+	-- LSP formatting works with buffer IN memory
+	-- CLI FORMATTERS MUST CONFORM TO THIS!
 	vim.api.nvim_create_autocmd("BufWritePre", {
 		group = M.formatting,
 		callback = function()
 			-- Specify buffer explicitly instead of 0, to avoid an assert.
 			-- 0 works on previous version of neovim
-
 			local clients = vim.lsp.get_clients({ bufnr = 0 })
 			if lsp_formatter ~= nil then
 				M.format_buf(lsp_formatter)

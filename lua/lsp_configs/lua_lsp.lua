@@ -2,7 +2,7 @@ M = {}
 
 M.filetype = "lua"
 M.file_ext = "*.lua"
-M.formatter = "stylua"
+M.formatter = { "stylua", "-" }
 M.config = {
 	name = "lua-lsp-server",
 	cmd = { "lua-language-server" },
