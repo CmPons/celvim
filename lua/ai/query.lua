@@ -4,6 +4,7 @@ M.query_buf = nil
 M.query_win = nil
 M.prompt = "User: "
 M.bot = "Bot: "
+M.snippet_length = 25
 M.system_prompt = [[
 <SystemPrompt>
   You are a programming assistant embedded in Neovim. The user is asking a question while editing code.                                                                                                              
@@ -37,25 +38,14 @@ M.open_query_window = function()
 	local last_win = vim.api.nvim_get_current_win()
 	local cursor_pos = vim.api.nvim_win_get_cursor(last_win)
 	local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-	local from = math.max(1, cursor_pos[1] - 5)
-	local to = math.min(#lines, cursor_pos[1] + 5)
+	local from = math.max(1, cursor_pos[1] - M.snippet_length)
+	local to = math.min(#lines, cursor_pos[1] + M.snippet_length)
 	local last_snippet_lines = vim.api.nvim_buf_get_lines(0, from, to, false)
 	local last_snippet = table.concat(last_snippet_lines, "\n") .. "\n"
 
-	M.query_buf = vim.api.nvim_create_buf(false, true)
-
-	local size = require("utils").pos_from_screen_percent({ row = 0, col = 0.1 })
-	local config = {
-		relative = "editor",
-		row = size.row,
-		col = size.col,
-		width = math.floor(win_size.col * 0.8),
-		height = math.floor(win_size.row * 0.8),
-		border = "single",
-		style = "minimal",
-		title = "How can I ...?",
-	}
-	M.query_win = vim.api.nvim_open_win(M.query_buf, true, config)
+	vim.cmd("tabnew")
+	M.query_buf = vim.api.nvim_get_current_buf()
+	M.query_win = vim.api.nvim_get_current_win()
 
 	vim.api.nvim_buf_set_lines(M.query_buf, 0, 0, false, { "User: " })
 	vim.api.nvim_win_set_cursor(M.query_win, { 1, #M.prompt })
@@ -89,6 +79,8 @@ M.open_query_window = function()
 			last_snippet,
 			prompt
 		)
+
+		info("Query prompt", prompt)
 
 		vim.system({ "claude", "--model", "haiku", auto_mode, "-p", prompt }, vim.schedule_wrap(M.query_finish))
 	end, { desc = "AI Query", buffer = M.query_buf })
