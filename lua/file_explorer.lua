@@ -165,7 +165,7 @@ local function find_node_by_path(path)
 			return
 		end
 
-		if node.path == path then
+		if vim.fs.normalize(node.path) == path then
 			curr_node = node
 			return
 		end
