@@ -23,6 +23,7 @@ local modules = {
 	"workspace_grep",
 	"p4",
 	"ai.reviewer",
+	"ai.query",
 }
 
 _G.win_size = { row = vim.api.nvim_win_get_height(0), col = vim.api.nvim_win_get_width(0) }
