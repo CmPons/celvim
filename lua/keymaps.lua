@@ -140,7 +140,7 @@ M.Init = function()
 	end, { desc = "Next Error" })
 
 	M.set_keymap("n", "<leader>da", function()
-		vim.diagnostic.setqflist({ open = true, severity = { min = vim.diagnostic.severity.WARN } })
+		vim.diagnostic.setqflist({ open = true, severity = { min = vim.diagnostic.severity.HINT } })
 	end, { desc = "Show all diagnostics" })
 
 	-- Window switching

@@ -16,6 +16,7 @@
 
             # Utils
             tree
+            rg
             fzf
 
             # LSPs and Formatters
