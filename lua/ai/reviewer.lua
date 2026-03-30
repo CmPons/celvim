@@ -62,7 +62,8 @@ local reviewer_exit = function(out)
 	end
 end
 
-local prompt = [[Launch a sub-agent to run the /review skill on the changed files in git.
+local prompt = [[Launch a sub-agent to run the /review skill on the changed files.
+  Note! If your PWD contains 'd:/p4/games/Games' you are in p4! Otherwise assume git!
 
   Once the sub-agent completes, synthesize ALL of its findings into a single JSON object.
 
