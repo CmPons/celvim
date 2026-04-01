@@ -1,9 +1,87 @@
+--- @class ClaudeContentBlock
+--- @field type "text"|"tool_use"|"tool_result"|"thinking"
+--- @field text? string
+--- @field id? string
+--- @field name? string
+--- @field input? table
+--- @field thinking? string
+
+--- @class ClaudeCacheCreation
+--- @field ephemeral_5m_input_tokens integer
+--- @field ephemeral_1h_input_tokens integer
+
+--- @class ClaudeUsage
+--- @field input_tokens integer
+--- @field cache_creation_input_tokens integer
+--- @field cache_read_input_tokens integer
+--- @field cache_creation ClaudeCacheCreation
+--- @field output_tokens integer
+--- @field service_tier string
+--- @field inference_geo string
+
+--- @class ClaudeMessage
+--- @field model string
+--- @field id string
+--- @field type "message"
+--- @field role "assistant"
+--- @field content ClaudeContentBlock[]
+--- @field stop_reason? "end_turn"|"max_tokens"|"stop_sequence"|"tool_use"
+--- @field stop_sequence? string
+--- @field stop_details? table
+--- @field usage ClaudeUsage
+--- @field context_management? table
+
+--- @class ClaudeAssistantEvent
+--- @field type "assistant"
+--- @field message ClaudeMessage
+--- @field parent_tool_use_id? string
+--- @field session_id string
+--- @field uuid string
+
+--- @class ClaudeSystemEvent
+--- @field type "system"
+--- @field subtype "init"|"api_retry"
+--- @field session_id string
+--- @field attempt? integer
+--- @field max_retries? integer
+--- @field retry_delay_ms? integer
+--- @field error_status? integer
+--- @field error? string
+
+--- @class ClaudeResultEvent
+--- @field type "result"
+--- @field subtype string
+--- @field session_id string
+--- @field uuid string
+
+--- @class ClaudeStreamDelta
+--- @field type "text_delta"|"input_json_delta"
+--- @field text? string
+--- @field partial_json? string
+
+--- @class ClaudeStreamApiEvent
+--- @field type "message_start"|"content_block_start"|"content_block_delta"|"content_block_stop"|"message_delta"|"message_stop"
+--- @field index? integer
+--- @field delta? ClaudeStreamDelta
+--- @field message? ClaudeMessage
+--- @field content_block? ClaudeContentBlock
+
+--- @class ClaudeStreamEvent
+--- @field type "stream_event"
+--- @field event ClaudeStreamApiEvent
+--- @field session_id string
+--- @field uuid string
+--- @field parent_tool_use_id? string
+
+--- @alias ClaudeEvent ClaudeAssistantEvent|ClaudeSystemEvent|ClaudeResultEvent|ClaudeStreamEvent
+
 local M = {}
 
 M.query_buf = nil
 M.query_win = nil
-M.prompt = "User: "
-M.bot = "Bot: "
+M.prompt = " : "
+M.bot = "󰚩 : "
+M.model = "opus"
 M.snippet_length = 25
 M.system_prompt = [[
 <SystemPrompt>
@@ -18,19 +96,42 @@ M.system_prompt = [[
   </SystemPrompt>
 ]]
 
---- @type fun(out: vim.SystemCompleted)
-M.query_finish = function(out)
-	if out == nil then
+M.on_std_out = function(_, data)
+	if data == nil then
 		return
 	end
 
-	local stdout = M.bot .. out.stdout
-	local lines = vim.split(stdout, "\n")
-	vim.api.nvim_buf_set_lines(M.query_buf, -1, -1, false, lines)
-	vim.api.nvim_buf_set_lines(M.query_buf, -1, -1, false, { "User: " })
+	-- 🤖
+	info(data)
+
+	--- @type ClaudeEvent
+	local claude_code_msg = vim.json.decode(data)
+
+	if claude_code_msg.type == "assistant" then
+		for _, content in ipairs(claude_code_msg.message.content) do
+			local line_data = vim.inspect(content)
+
+			if content.type == "text" then
+				line_data = content.text
+			elseif content.type == "thinking" then
+				line_data = " " .. content.thinking
+			elseif content.type == "tool_use" then
+				line_data = "󱁤 " .. content.name .. " \n" .. vim.inspect(content.input)
+			end
+
+			local lines = vim.split(line_data, "\n")
+			lines[1] = M.bot .. lines[1]
+
+			vim.api.nvim_buf_set_lines(M.query_buf, -1, -1, false, lines)
+		end
+	end
+end
+
+M.on_bot_done = function(_)
+	vim.api.nvim_buf_set_lines(M.query_buf, -1, -1, false, { M.prompt })
 
 	local lines = vim.api.nvim_buf_get_lines(M.query_buf, 0, -1, false)
-	vim.api.nvim_win_set_cursor(M.query_win, { #lines, #M.prompt })
+	vim.api.nvim_win_set_cursor(M.query_win, { #lines, #M.prompt + 1 })
 end
 
 M.open_query_window = function()
@@ -47,8 +148,13 @@ M.open_query_window = function()
 	M.query_buf = vim.api.nvim_get_current_buf()
 	M.query_win = vim.api.nvim_get_current_win()
 
-	vim.api.nvim_buf_set_lines(M.query_buf, 0, 0, false, { "User: " })
-	vim.api.nvim_win_set_cursor(M.query_win, { 1, #M.prompt })
+	vim.bo[M.query_buf].filetype = "aiquery"
+	vim.bo[M.query_buf].buftype = "nofile"
+	vim.api.nvim_set_option_value("number", false, { win = 0 })
+	vim.api.nvim_set_option_value("relativenumber", false, { win = 0 })
+
+	vim.api.nvim_buf_set_lines(M.query_buf, 0, 0, false, { M.prompt })
+	vim.api.nvim_win_set_cursor(M.query_win, { 1, #M.prompt + 1 })
 	vim.cmd("startinsert")
 
 	local auto_mode = "--dangerously-skip-permissions"
@@ -82,7 +188,11 @@ M.open_query_window = function()
 
 		info("Query prompt", prompt)
 
-		vim.system({ "claude", "--model", "haiku", auto_mode, "-p", prompt }, vim.schedule_wrap(M.query_finish))
+		vim.system(
+			{ "claude", "--model", M.model, auto_mode, "-p", prompt, "--output-format", "stream-json", "--verbose" },
+			{ text = true, stdout = vim.schedule_wrap(M.on_std_out) },
+			vim.schedule_wrap(M.on_bot_done)
+		)
 	end, { desc = "AI Query", buffer = M.query_buf })
 end
 
