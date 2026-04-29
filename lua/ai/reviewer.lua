@@ -49,8 +49,12 @@ local reviewer_exit = function(out)
 				end
 
 				--- @type vim.Diagnostic
-				local diagnostic =
-					{ lnum = review.line_num, col = review.col, message = review.message, severity = review.severity }
+				local diagnostic = {
+					lnum = review.line_num - 1,
+					col = review.col,
+					message = review.message,
+					severity = review.severity,
+				}
 
 				table.insert(diagnostics[bufnr], diagnostic)
 			end
