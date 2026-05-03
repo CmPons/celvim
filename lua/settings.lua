@@ -33,3 +33,5 @@ vim.cmd(":filetype plugin on")
 vim.cmd(":set shortmess +=F")
 -- Replace :w with silent :w
 -- vim.cmd("cabbrev w silent write")
+
+vim.opt.swapfile = false
