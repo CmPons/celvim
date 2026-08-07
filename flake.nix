@@ -1,11 +1,22 @@
 {
   description = "A flake setting up CelVim";
-  inputs = { flake-utils.url = "github:numtide/flake-utils"; };
-  outputs = { self, nixpkgs, flake-utils, ... }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let pkgs = nixpkgs.legacyPackages.${system};
-      celvim = pkgs.writeShellScriptBin "cvim" ''nvim'';
-      in {
+  inputs = {
+    flake-utils.url = "github:numtide/flake-utils";
+  };
+  outputs =
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+      ...
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+        celvim = pkgs.writeShellScriptBin "cvim" ''nvim'';
+      in
+      {
 
         devShells.default = pkgs.mkShell {
           NVIM_APPNAME = "celvim";
@@ -28,11 +39,14 @@
             omnisharp-roslyn
             stylua
             shfmt
+            glsl_analyzer
+            typescript-language-server
           ];
 
           shellHook = ''
             ln -sfn ${self.outPath} ~/.config/$NVIM_APPNAME
           '';
         };
-      });
+      }
+    );
 }
